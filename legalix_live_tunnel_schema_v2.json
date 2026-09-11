@@ -1,0 +1,55 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix Engineering 24/7 Production Live API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://employment-sic-recognized-menu.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "הרצת בקרת תכן הנדסית מלאה ופיזיקה",
+        "operationId": "auditStructuralModel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "building_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["building_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאות הבקרה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "building_id": { "type": "string" },
+                    "integrated_consultants_system": { "type": "object" },
+                    "physics_and_fea_simulation": { "type": "object" },
+                    "summary": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
