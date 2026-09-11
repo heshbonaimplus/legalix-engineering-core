@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Legalix Engineering BIM Co-Pilot</Name>
+    <Assembly>LegalixEngineeringRevit.dll</Assembly>
+    <FullClassName>LegalixEngineering.App</FullClassName>
+    <ClientId>a1b2c3d4-e5f6-7890-abcd-ef1234567890</ClientId>
+    <VendorId>LEGALIX</VendorId>
+    <VendorDescription>Legalix Engineering - Automated BIM Audit & One-Click Remediation</VendorDescription>
+  </AddIn>
+</RevitAddIns>
