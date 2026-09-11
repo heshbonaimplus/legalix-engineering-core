@@ -1,0 +1,310 @@
+import json
+import os
+
+candidate_rule_library_v1 = {
+    "system_name": "Legalix Engineering Candidate Rules Engine V1 — Spec",
+    "version": "1.0.0-CANDIDATE-SPEC",
+    "status": "Candidate Rules V1 – Pending Engineering Verification",
+    "core_statement": "ארכיטקטורה דטרמיניסטית לצמצום תלות בפרשנות AI ולמניעת שימוש ב־AI כמקור נורמטיבי.",
+    "architecture_layers": {
+        "Layer_1_Geometry_Engine": "חילוץ עובדות גיאומטריות בלבד מתוך RVT/IFC/DWG (מה ראיתי במודל)",
+        "Layer_2_Calculation_Engine": "ביצוע חישובים פיזיקליים, הידראוליים ותרמיים דטרמיניסטיים (מה חישבתי)",
+        "Layer_3_Verified_Rules_Engine": "השוואה בלעדית מול ספי תקנים, טבלאות נתונים והנחיות תכן מאומתות (מה התקן דורש)",
+        "Layer_4_AI_Engineering_Assistant": "הסבר מהות הממצא, הקשר בין-מערכתי, הצעת חלופות וניסוח כירורגי ליועץ",
+        "Layer_5_Human_Approval_Gate": "סמכות הכרעה סופית בלעדית ליועץ/בקר התכן המוסמך (Approve / Reject / Variance)"
+    },
+    "status_model": {
+        "RED": "חובה לתקן — כשל קריטי, בטיחות חיים (Life Safety), התנגשות קשה בשלד או אי-עמידה בתקן מחייב",
+        "YELLOW": "דורש החלטת יועץ / תיאום — פערי תכן שניתן לגשר עליהם בפרקטיקת שטח, הנחיית תכנון או תיאום אדריכלי/קונסטרוקטיבי",
+        "BLUE": "המלצת אופטימיזציה / הנדסת ערך — המלצה לחיסכון בעלויות ליזם, יעילות אנרגטית ושדרוג מפרט",
+        "GREEN": "PASS (נבדק ונמצא תקין) — לא נמצאה חריגה במסגרת הבדיקות האוטומטיות שהופעלו על האלמנט והנתונים הזמינים במודל"
+    },
+    "hold_point_policy": {
+        "system_output": "RECOMMENDED_HOLD_POINT (המלצה בלבד מטעם המערכת)",
+        "legal_binding": "הכרזת נקודת עצירה רשמית ומחייבת תקפה אך ורק לאחר אישור ידני וחתימה של בקר התכן / היועץ המוסמך"
+    },
+    "refrigerant_data_table": {
+        "R-410A": {"Safety_Group": "A1", "RCL_kg_m3": 0.44, "Standard": "SI 920 / EN 378:2016 Table C.1"},
+        "R-32": {"Safety_Group": "A2L", "RCL_kg_m3": 0.06, "Standard": "SI 920 / EN 378:2016 Table C.1"},
+        "R-134a": {"Safety_Group": "A1", "RCL_kg_m3": 0.25, "Standard": "SI 920 / EN 378:2016 Table C.1"}
+    },
+    "rules": [
+        # --- פרק א: חניונים תת-קרקעיים ---
+        {
+            "Rule_ID": "HVAC-JET-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Car_Park_Jet_Fan_Smoke_Control",
+            "Element_Type": "Jet_Fan",
+            "Rule_Name": "חסימת סילון אוויר ע\"י קורות שלד יורדות (Downstand Beam Obstruction)",
+            "Detection_Type": "GEOMETRY",
+            "Detection_Confidence": "100%",
+            "Rule_Verification": "CANDIDATE_VERIFIED",
+            "Source_Confidence": "85%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "JetFan_Discharge_Point", "type": "Point3D", "unit": "m"},
+                {"name": "Downstand_Beam_Solid", "type": "Solid3D", "unit": "m"},
+                {"name": "Deflector_Vane_Angle", "type": "Float", "unit": "deg"}
+            ],
+            "Calculation_Formula": "Distance_to_Beam_m = Beam_Face_X - JetFan_Discharge_X",
+            "Threshold_Type": "DESIGN_RULE",
+            "Standard_Requirement": "Jet fan placement shall prevent direct stream impingement on downstand beams",
+            "Threshold_Condition": "Distance_to_Beam_m < 8.0 AND Deflector_Vane_Angle > -5.0",
+            "Standard_Source": "BS 7346-7 / ת״י 1001 חלק 7",
+            "Edition": "2013 / 2018",
+            "Clause": "Clause 8.4 (Jet fan placement relative to downstand beams)",
+            "Requirement_Type": "Design Guide / Best Practice",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "ENGINEERING_COORDINATION",
+            "Suggested_Remediation": "התקנת כנפוני הטיה בזווית של -5° לניתוב הסילון מתחת לתחתית הקורה, או הרחקת המפוח למרחק מספק מהקורה."
+        },
+        {
+            "Rule_ID": "HVAC-JET-002",
+            "Discipline": "HVAC",
+            "Sub_System": "Parking_Smoke_Control",
+            "Rule_Applicability": "Car_Park_Jet_Fan_Smoke_Control",
+            "Element_Type": "Jet_Fan",
+            "Rule_Name": "מרווח אורכי מקסימלי בין מפוחי סילון עוקבים (Longitudinal Spacing)",
+            "Detection_Type": "GEOMETRY",
+            "Detection_Confidence": "100%",
+            "Rule_Verification": "CANDIDATE_VERIFIED",
+            "Source_Confidence": "85%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Fan_A_Coordinates", "type": "Point3D", "unit": "m"},
+                {"name": "Fan_B_Coordinates", "type": "Point3D", "unit": "m"},
+                {"name": "Fan_Rated_Thrust", "type": "Float", "unit": "N"}
+            ],
+            "Calculation_Formula": "Spacing_m = sqrt((X2 - X1)^2 + (Y2 - Y1)^2)",
+            "Threshold_Type": "DESIGN_RULE",
+            "Standard_Requirement": "Jet fan spacing shall ensure continuous sweep velocity (v >= 1.5 m/s) without stagnant dead zones",
+            "Threshold_Condition": "Spacing_m > 28.0 AND Fan_Rated_Thrust == 50.0",
+            "Standard_Source": "BS 7346-7 / ת״י 1001 חלק 7",
+            "Edition": "2013 / 2018",
+            "Clause": "Section 9.2 (Induction thrust coverage spacing)",
+            "Requirement_Type": "Design Guide / Performance Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "ENGINEERING_DESIGN",
+            "Suggested_Remediation": "צמצום המרווח האורכי בין המפוחים להבטחת מהירות שטיפה רציפה v ≥ 1.5 m/s לעבר פירי הפליטה."
+        },
+        {
+            "Rule_ID": "HVAC-JET-003",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Car_Park_Smoke_Control_Fans",
+            "Element_Type": "Jet_Fan",
+            "Rule_Name": "דירוג עמידות חום ואש למפוחי סילון (Heat Rating per EN 12101-3)",
+            "Detection_Type": "METADATA",
+            "Detection_Confidence": "95%",
+            "Rule_Verification": "VERIFIED",
+            "Source_Confidence": "100%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Specified_Temp_Rating", "type": "Integer", "unit": "C"},
+                {"name": "Specified_Duration", "type": "Integer", "unit": "min"}
+            ],
+            "Calculation_Formula": "Is_Compliant_F300 = (Specified_Temp_Rating >= 300 AND Specified_Duration >= 60)",
+            "Threshold_Type": "STANDARD_HARD_LIMIT",
+            "Standard_Requirement": "Powered smoke ventilators shall be classified to F300 (300°C for 60 min) or F400 (400°C for 120 min)",
+            "Threshold_Condition": "Specified_Temp_Rating < 300 OR Specified_Duration < 60",
+            "Standard_Source": "EN 12101-3 / ת״י 1001 חלק 7",
+            "Edition": "2015 / 2018",
+            "Clause": "Table 1 (Classification of Powered Smoke and Heat Control Ventilators)",
+            "Requirement_Type": "Mandatory Statutory Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "EQUIPMENT_SPECIFICATION",
+            "Suggested_Remediation": "שדרוג מפרט המפוחים לדירוג חום מאושר F300 (300°C למשך 60 דקות לפי EN 12101-3) או F400 (400°C ל-120 דק')."
+        },
+        {
+            "Rule_ID": "HVAC-DCT-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Car_Park_Driving_Aisles",
+            "Element_Type": "Duct",
+            "Rule_Name": "גובה ראש נטו מתחת לתעלות עשן בנתיבי נסיעה (Clear Headroom in Driving Aisles)",
+            "Detection_Type": "GEOMETRY",
+            "Detection_Confidence": "100%",
+            "Rule_Verification": "VERIFIED",
+            "Source_Confidence": "100%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Duct_Bottom_Z", "type": "Float", "unit": "m"},
+                {"name": "Floor_FFL_Z", "type": "Float", "unit": "m"},
+                {"name": "Space_Usage_Classification", "type": "String", "unit": "enum"}
+            ],
+            "Calculation_Formula": "Headroom_m = Duct_Bottom_Z - Floor_FFL_Z",
+            "Threshold_Type": "MANDATORY_REGULATION",
+            "Standard_Requirement": "Clear Headroom H_clear >= 2.40m along driving aisles (2.70m for fire truck routes)",
+            "Threshold_Condition": "Headroom_m < 2.40 AND Space_Usage_Classification == 'Driving_Aisle'",
+            "Standard_Source": "תקנות התכנון והבנייה (התקנת מקומות חניה) / הנחיות משרד התחבורה",
+            "Edition": "1983 ותיקוניה",
+            "Clause": "סעיף 17 (גובה חופשי בחניונים תת-קרקעיים)",
+            "Requirement_Type": "Mandatory Statutory Regulation",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "COORDINATION_AND_REDESIGN",
+            "Suggested_Remediation": "נדרש תיאום קונסטרוקטיבי לשינוי תוואי התעלה או בחינת מעבר מאושר ע\"י מהנדס השלד לשמירה על גובה ראש נטו H_clear ≥ 2.40 מטר."
+        },
+
+        # --- פרק ב: חדרי אנרגיה ושנאים ---
+        {
+            "Rule_ID": "HVAC-TX-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Transformer_Rooms",
+            "Element_Type": "Room_Cooling",
+            "Rule_Name": "ספיקת אוורור נדרשת לפיזור עומס חום שנאים (Transformer Room Airflow Calculation)",
+            "Detection_Type": "CALCULATION",
+            "Detection_Confidence": "90%",
+            "Rule_Verification": "CANDIDATE_VERIFIED",
+            "Source_Confidence": "95%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Transformer_Rating_kVA", "type": "Float", "unit": "kVA"},
+                {"name": "Total_Heat_Loss_kW", "type": "Float", "unit": "kW"},
+                {"name": "Max_Ambient_Temp_C", "type": "Float", "unit": "C"},
+                {"name": "Max_Allowed_Room_Temp_C", "type": "Float", "unit": "C"}
+            ],
+            "Calculation_Formula": "Q_required_m3_h = Total_Heat_Loss_kW / (0.00034 * (Max_Allowed_Room_Temp_C - Max_Ambient_Temp_C))",
+            "Threshold_Type": "CALCULATED",
+            "Standard_Requirement": "Room temperature shall not exceed applicable equipment limit (T_max <= 40.0°C per IEC 60076 / IEC utility specs)",
+            "Threshold_Condition": "(Max_Ambient_Temp_C + (Total_Heat_Loss_kW / (Airflow_m3_h * 0.00034))) > 40.0",
+            "Standard_Source": "מפרט חברת החשמל לישראל (חח״י) / IEC 60076 / ת״י 1001.4",
+            "Edition": "2020 / 2018",
+            "Clause": "סעיף 5.1 (תנאי טמפרטורה ואוורור בחדרי שנאים יבשים)",
+            "Requirement_Type": "Mandatory Utility Specification",
+            "Severity": "RED",
+            "Project_Specific_Override": "For Project Lod Nir-Zvi (2x1600kVA, Loss=36kW, Amb=38C, Limit=40C) -> Q_required = 12,000 m³/h",
+            "Suggested_Fix_Type": "ENGINEERING_DESIGN",
+            "Suggested_Remediation": "תכנון ספיקת אוורור מאולץ Q_required לפיזור עומס החום של השנאים לשמירה על טמפרטורת חדר T ≤ 40°C לפי מפרט חח״י."
+        },
+        {
+            "Rule_ID": "HVAC-LIFT-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Firefighter_Elevator_Shaft_Pressurization",
+            "Element_Type": "Elevator_Shaft",
+            "Rule_Name": "ספיקת אוויר בעל-לחץ לפיר מעלית כבאים (Firefighters Lift Pressurization Airflow)",
+            "Detection_Type": "CALCULATION",
+            "Detection_Confidence": "90%",
+            "Rule_Verification": "VERIFIED",
+            "Source_Confidence": "100%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Door_Leakage_Area_m2", "type": "Float", "unit": "m2"},
+                {"name": "Number_Of_Landing_Doors", "type": "Integer", "unit": "count"},
+                {"name": "Design_Pressure_Delta_Pa", "type": "Float", "unit": "Pa"}
+            ],
+            "Calculation_Formula": "Q_total_m3_s = 0.83 * Door_Leakage_Area_Total * sqrt(Design_Pressure_Delta_Pa) * Safety_Factor",
+            "Threshold_Type": "CALCULATED",
+            "Standard_Requirement": "Dedicated pressurization system shall maintain 25–50 Pa in firefighter lift shaft and protected lobbies",
+            "Threshold_Condition": "LiftShaft.IsFirefighterLift == True AND LiftShaft.HasDedicatedFan == False",
+            "Standard_Source": "EN 81-72 / ת״י 1001.2.2 / EN 12101-6",
+            "Edition": "2020 / 2018",
+            "Clause": "Clause 5.3 (Protection against smoke and water in firefighter lift shafts)",
+            "Requirement_Type": "Mandatory Life Safety Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": "For Project Lod Nir-Zvi (18 stories + 2 basements) -> Q_calculated = 25,000 m³/h (Duty/Standby VFD)",
+            "Suggested_Fix_Type": "ENGINEERING_DESIGN",
+            "Suggested_Remediation": "התקנת מערך מפוחי על-לחץ עצמאי בספיקה מחושבת לפי תקן EN 81-72 ו-EN 12101-6 Class D."
+        },
+
+        # --- פרק ג: דירות מגורים וגז קירור ---
+        {
+            "Rule_ID": "HVAC-REF-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Refrigerant_Piping_Occupied_Spaces",
+            "Element_Type": "VRF_System",
+            "Rule_Name": "הגבלת ריכוז גז קירור רעיל בחדרים מאוכלסים (Refrigerant Concentration Limit - RCL)",
+            "Detection_Type": "CALCULATION",
+            "Detection_Confidence": "95%",
+            "Rule_Verification": "VERIFIED",
+            "Source_Confidence": "100%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Total_System_Refrigerant_Charge_kg", "type": "Float", "unit": "kg"},
+                {"name": "Refrigerant_Type", "type": "String", "unit": "enum"},
+                {"name": "Smallest_Occupied_Room_Volume_m3", "type": "Float", "unit": "m3"}
+            ],
+            "Calculation_Formula": "Calculated_Concentration = Total_System_Refrigerant_Charge_kg / Smallest_Occupied_Room_Volume_m3",
+            "Threshold_Type": "LOOKUP_TABLE",
+            "Standard_Requirement": "Refrigerant concentration in smallest enclosed occupied space shall not exceed RCL table value per SI 920 / EN 378",
+            "Threshold_Condition": "Calculated_Concentration > Refrigerant_Table[Refrigerant_Type].RCL_kg_m3",
+            "Standard_Source": "ת״י 920 / EN 378 / ISO 5149",
+            "Edition": "2020 / 2016",
+            "Clause": "Table C.1 (Refrigerant Safety Group Classification & Concentration Limits: R410A=0.44 kg/m³, R32=0.06 kg/m³)",
+            "Requirement_Type": "Mandatory Life Safety Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "ENGINEERING_DESIGN",
+            "Suggested_Remediation": "פיצול מעגלי ה-VRF להקטנת מטען הגז למעגל, שילוב שסתומי ניתוק מהירים או גלאי גז ייעודיים לפי ת״י 920."
+        },
+
+        # --- פרק ד: סופרפוזיציה וספרינקלרים ---
+        {
+            "Rule_ID": "HVAC-FP-001",
+            "Discipline": "Fire_Protection",
+            "Rule_Applicability": "Duct_Obstructions_To_Sprinklers",
+            "Element_Type": "Sprinkler_Below_Duct",
+            "Rule_Name": "ספרינקלרים תחת תעלות מיזוג רחבות (Below-Duct Sprinklers)",
+            "Detection_Type": "GEOMETRY",
+            "Detection_Confidence": "100%",
+            "Rule_Verification": "VERIFIED",
+            "Source_Confidence": "100%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Duct_Width_m", "type": "Float", "unit": "m"},
+                {"name": "Below_Duct_Sprinkler_Installed", "type": "Boolean", "unit": "bool"}
+            ],
+            "Calculation_Formula": "Has_Obstruction_Over_1200 = (Duct_Width_m > 1.20)",
+            "Threshold_Type": "STANDARD_HARD_LIMIT",
+            "Standard_Requirement": "Sprinklers shall be installed under fixed obstructions over 4 ft (1.2 m) wide per NFPA 13",
+            "Threshold_Condition": "Duct_Width_m > 1.20 AND Below_Duct_Sprinkler_Installed == False",
+            "Standard_Source": "NFPA 13 (Standard for the Installation of Sprinkler Systems)",
+            "Edition": "2022",
+            "Clause": "Section 10.2.7.2 (Obstructions to Sprinkler Discharge - Continuous Obstructions over 4 ft / 1.2 m)",
+            "Requirement_Type": "Mandatory Fire Protection Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": None,
+            "Suggested_Fix_Type": "ENGINEERING_DESIGN",
+            "Suggested_Remediation": "הוספת שורת ראשי ספרינקלר תלויים תחת התעלה כולל מגיני מים (Water Shields) ולוחיות איסוף חום לפי NFPA 13 סעיף 10.2.7."
+        },
+
+        # --- פרק ה: סיסמיקה ---
+        {
+            "Rule_ID": "HVAC-SEIS-001",
+            "Discipline": "HVAC",
+            "Rule_Applicability": "Ductwork_Seismic_Restraint",
+            "Element_Type": "Duct_Bracing",
+            "Rule_Name": "תמיכות סיסמיות אלכסוניות לתעלות כבדות (Seismic Sway Bracing)",
+            "Detection_Type": "GEOMETRY",
+            "Detection_Confidence": "95%",
+            "Rule_Verification": "CANDIDATE_VERIFIED",
+            "Source_Confidence": "90%",
+            "Human_Approval_Required": True,
+            "Required_Inputs": [
+                {"name": "Duct_Cross_Section_Area_m2", "type": "Float", "unit": "m2"},
+                {"name": "Has_Seismic_Sway_Bracing", "type": "Boolean", "unit": "bool"},
+                {"name": "Seismic_Hanger_Spacing_m", "type": "Float", "unit": "m"}
+            ],
+            "Calculation_Formula": "Needs_Seismic_Bracing = (Duct_Cross_Section_Area_m2 >= 0.50)",
+            "Threshold_Type": "STANDARD_PERFORMANCE_CRITERIA",
+            "Standard_Requirement": "Ducts >= 0.5m² or round ducts >= 700mm shall be seismically restrained with transverse & longitudinal bracing",
+            "Threshold_Condition": "Duct_Cross_Section_Area_m2 >= 0.50 AND Has_Seismic_Sway_Bracing == False",
+            "Standard_Source": "ת״י 413 / SMACNA Seismic Restraint Manual / ASCE 7-16",
+            "Edition": "2018 / 2020",
+            "Clause": "Section 13.6.7 (Ductwork Seismic Restraints and Anchorages)",
+            "Requirement_Type": "Mandatory Seismic Standard",
+            "Severity": "RED",
+            "Project_Specific_Override": "Design implementation: 45° angle steel 50x50x5 (lateral <= 9m, longitudinal <= 18m) + ETA C1/C2 anchors",
+            "Suggested_Fix_Type": "STRUCTURAL_SEISMIC_DESIGN",
+            "Suggested_Remediation": "תכנון מערך ריסון סיסמי רוחבי ואורכי בהתאם לדוח חישוב עומסים F_p לפי ת״י 413 והנחיות SMACNA."
+        }
+    ]
+}
+
+# Save Candidate JSON Rule Library V1
+json_out = '/home/yogi/lod_project/HVAC_CANDIDATE_RULE_LIBRARY_V1.json'
+with open(json_out, 'w', encoding='utf-8') as f:
+    json.dump(candidate_rule_library_v1, f, ensure_ascii=False, indent=2)
+
+print(f"Candidate Rule Library V1 JSON generated successfully at: {json_out}")

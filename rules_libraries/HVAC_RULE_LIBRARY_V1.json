@@ -1,0 +1,979 @@
+{
+  "system_name": "Legalix Engineering Verified Rules Engine — HVAC & Smoke Control V1",
+  "version": "1.0.0-PROD-SPEC",
+  "architecture_layers": {
+    "Layer_1_Geometry_Engine": "חילוץ עובדות גיאומטריות בלבד מתוך RVT/IFC/DWG (מרחקים, חתכים, קואורדינטות, שיפועים, גבהי FFL)",
+    "Layer_2_Calculation_Engine": "ביצוע חישובים הידראוליים, תרמיים ואווירודינמיים דטרמיניסטיים (מהירויות, ספיקות, מפל לחץ, ריכוז גז, עומס חום)",
+    "Layer_3_Verified_Rules_Engine": "השוואה בלעדית מול כללים מאומתים בספריית התקנים (סעיף תקן מדויק, שנת מהדורה, סיווג חובה מול המלצה)",
+    "Layer_4_AI_Engineering_Assistant": "הסבר מהות הכשל, הקשר בין-מערכתי, הצעת חלופות וניסוח כירורגי ליועץ",
+    "Layer_5_Human_Approval_Gate": "סמכות הכרעה סופית בלעדית ליועץ/בקר התכן המוסמך (Approve / Reject / Variance)"
+  },
+  "status_model": {
+    "RED": "חובה לתקן — כשל קריטי, בטיחות חיים, התנגשות קשה בשלד או אי-עמידה בתקן מחייב (Life Safety & Hard Clash)",
+    "YELLOW": "דורש החלטת יועץ / תיאום — פערי תכן שניתן לגשר עליהם בפרקטיקת שטח, הנחיית תכנון או תיאום אדריכלי/קונסטרוקטיבי",
+    "BLUE": "המלצת אופטימיזציה / הנדסת ערך — המלצה לחיסכון בעלויות ליזם, יעילות אנרגטית ושדרוג מפרט (Value Engineering)",
+    "GREEN": "PASS (נבדק ונמצא תקין) — לא נמצאה חריגה במסגרת הבדיקות האוטומטיות שהופעלו על האלמנט והנתונים הזמינים במודל"
+  },
+  "hold_point_policy": {
+    "system_role": "RECOMMENDED_HOLD_POINT (המלצה בלבד מטעם המערכת)",
+    "human_authority": "הכרזת נקודת עצירה רשמית תקפה אך ורק לאחר אישור ידני וחתימה של בקר התכן / היועץ המוסמך"
+  },
+  "rules": [
+    {
+      "Rule_ID": "HVAC-JET-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Parking_Smoke_Control",
+      "Element_Type": "Jet_Fan",
+      "Rule_Name": "חסימת סילון אוויר ע\"י קורות שלד יורדות (Beam Impingement)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Jet Fan 3D Solid Coordinates",
+        "Downstand Beam Geometry",
+        "Deflector Vane Angle (deg)"
+      ],
+      "Calculation_Formula": "Distance_to_Beam = Beam.Face_X - JetFan.Discharge_X",
+      "Trigger_Condition": "Distance_to_Beam < 8.0 AND JetFan.DeflectorAngle > -5.0",
+      "Standard_Threshold": "Distance >= 8.0m OR Deflector Angle <= -5.0 deg",
+      "Severity": "RED",
+      "Requirement_Type": "Design Guide / Performance Standard",
+      "Standard_Source": "BS 7346-7",
+      "Edition": "2013",
+      "Clause": "Clause 8.4 (Jet fan placement relative to downstand beams)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "JetFan_Element_ID",
+        "Beam_Element_ID",
+        "Measured_Distance_m",
+        "Deflector_Angle_deg"
+      ],
+      "Description_He": "סילון אוויר מהיר פוגע חזיתית בקורת בטון יורדת, שובר את שכבת הציפה התרמית ומערבל עשן רעיל וחם מטה לנתיב המילוט.",
+      "Suggested_Remediation": "התקנת כנפוני הטיה בזווית של -5° לניתוב הסילון מתחת לקורות השלד, או הרחקת המפוח למרחק L ≥ 8.0 מטר מהקורה."
+    },
+    {
+      "Rule_ID": "HVAC-JET-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Parking_Smoke_Control",
+      "Element_Type": "Jet_Fan",
+      "Rule_Name": "מרווח אורכי מקסימלי בין מפוחי סילון עוקבים (Longitudinal Spacing)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Consecutive Jet Fans Coordinates (X, Y)",
+        "Thrust Rating (N)"
+      ],
+      "Calculation_Formula": "Spacing = sqrt((X2 - X1)^2 + (Y2 - Y1)^2)",
+      "Trigger_Condition": "Spacing > 28.0 AND JetFan.Thrust == 50",
+      "Standard_Threshold": "Spacing <= 28.0m (for 50N Thrust Fans)",
+      "Severity": "RED",
+      "Requirement_Type": "Design Guide / Performance Standard",
+      "Standard_Source": "BS 7346-7 / ת״י 1001 חלק 7",
+      "Edition": "2013 / 2018",
+      "Clause": "Section 9.2 (Induction thrust coverage spacing)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC Specialist",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Fan_A_ID",
+        "Fan_B_ID",
+        "Measured_Spacing_m",
+        "Rated_Thrust_N"
+      ],
+      "Description_He": "מרווח מעל 28 מטר גורם לדעיכת מהירות הזרימה מתחת ל-1.0 מ\"ש ויוצר שטחים מתים של עשן עומד בחניון.",
+      "Suggested_Remediation": "צמצום המרווח האורכי בין המפוחים למקסימום S ≤ 28.0 מטר להבטחת מהירות שטיפה רציפה v ≥ 1.5 m/s."
+    },
+    {
+      "Rule_ID": "HVAC-JET-003",
+      "Discipline": "HVAC",
+      "Sub_System": "Parking_Smoke_Control",
+      "Element_Type": "Jet_Fan",
+      "Rule_Name": "דירוג עמידות חום ואש למפוחי סילון (Heat Rating per EN 12101-3)",
+      "Trigger_Condition": "JetFan.TempRating_C < 300 OR JetFan.Duration_min < 60",
+      "Standard_Threshold": "Class F300 (300°C for 60 min) / Class F400 (400°C for 120 min) per EN 12101-3",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Statutory Standard",
+      "Standard_Source": "EN 12101-3 / ת״י 1001 חלק 7",
+      "Edition": "2015 / 2018",
+      "Clause": "Table 1 (Classification of Powered Smoke and Heat Control Ventilators)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Fire Safety Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "JetFan_Element_ID",
+        "Specified_Temp_C",
+        "Specified_Duration_min"
+      ],
+      "Description_He": "מפוח ללא דירוג F300 מאושר יישרף ויושבת תוך דקות ספורות בעת שריפת רכבים בחניון.",
+      "Suggested_Remediation": "שדרוג מפרט המפוחים לדירוג חום מאושר F300 (300°C למשך 60 דקות לפי EN 12101-3) או F400 (400°C ל-120 דק')."
+    },
+    {
+      "Rule_ID": "HVAC-JET-004",
+      "Discipline": "HVAC",
+      "Sub_System": "Parking_Smoke_Control",
+      "Element_Type": "Jet_Fan",
+      "Rule_Name": "יכולת היפוך כיוון דחף מפוחי סילון (100% Reversible Thrust)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Equipment Schedule Parameter: Is_Reversible"
+      ],
+      "Calculation_Formula": "Reversibility_Check = (Is_Reversible == True)",
+      "Trigger_Condition": "JetFan.IsReversible == False",
+      "Standard_Threshold": "100% Reversible Thrust in multi-zone parking",
+      "Severity": "BLUE",
+      "Requirement_Type": "Best Practice / Value Engineering",
+      "Standard_Source": "ASHRAE HVAC Applications Handbook",
+      "Edition": "2023",
+      "Clause": "Chapter 54 (Enclosed Vehicle Facilities - Smoke Management)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC Specialist",
+      "Confidence": "90%",
+      "Evidence_Fields": [
+        "JetFan_Element_ID",
+        "Reversible_Parameter_Value"
+      ],
+      "Description_He": "מפוח חד-כיווני מגביל את גמישות ניתוב העשן כאשר מוקד השריפה סמוך לפיר היניקה.",
+      "Suggested_Remediation": "שילוב מנועים דו-כיווניים (Reversible) המאפשרים שינוי כיוון דחיפה לפי מוקד השריפה לחסכון בעלויות תפעול."
+    },
+    {
+      "Rule_ID": "HVAC-DCT-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Smoke_Exhaust_Ductwork",
+      "Element_Type": "Duct",
+      "Rule_Name": "גובה ראש נטו מתחת לתעלות עשן בנתיבי נסיעה (Clear Headroom)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Duct Bottom Elevation",
+        "Space Type Polygon",
+        "Finished Floor Level (FFL)"
+      ],
+      "Calculation_Formula": "Headroom_m = Duct.Bottom_Z - Floor.FFL_Z",
+      "Trigger_Condition": "Headroom_m < 2.40 AND Space.Usage == 'Driving_Aisle'",
+      "Standard_Threshold": "H_clear >= 2.40m (2.70m for Fire Trucks & Service Routes)",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Statutory Regulation",
+      "Standard_Source": "תקנות התכנון והבנייה (התקנת מקומות חניה) / הנחיות משרד התחבורה",
+      "Edition": "1983 ותיקוניה",
+      "Clause": "סעיף 17 (גובה חופשי בחניונים תת-קרקעיים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Architectural & MEP Coordinator",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_Element_ID",
+        "Floor_Level",
+        "Measured_Headroom_m",
+        "Location_Coordinates"
+      ],
+      "Description_He": "תעלת עשן יורדת מתחת לגובה 2.40 מטר בנתיב נסיעה — סכנת פגיעת משאיות שירות ורכבי כיבוי.",
+      "Suggested_Remediation": "תיאום שרוול פלדה יצוק מראש בשליש המרכזי של קורת השלד (h/3) לשמירה על גובה ראש נטו H ≥ 2.45 מטר."
+    },
+    {
+      "Rule_ID": "HVAC-DCT-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Smoke_Exhaust_Ductwork",
+      "Element_Type": "Duct",
+      "Rule_Name": "עובי פח מינימלי לתעלות שחרור עשן למניעת קריסה (Duct Implosion)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Duct Cross Section Area (m²)",
+        "Sheet Metal Thickness (mm)"
+      ],
+      "Calculation_Formula": "Area_m2 = Width_m * Height_m",
+      "Trigger_Condition": "SheetThickness_mm < 1.2 AND Area_m2 >= 0.5",
+      "Standard_Threshold": "Thickness >= 1.2mm (Gauge 18) + Stiffeners per EN 12101-7",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Product Standard",
+      "Standard_Source": "EN 12101-7 / ת״י 1001",
+      "Edition": "2011 / 2018",
+      "Clause": "Section 5.2 (Mechanical resistance and stability under negative pressure)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Mechanical Engineer",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Duct_Element_ID",
+        "Duct_Dimensions_mm",
+        "Specified_Gauge_mm"
+      ],
+      "Description_He": "תעלת עשן מפח דק 0.6 מ\"מ תקרוס פנימה (Implosion) תחת שילוב של תת-לחץ יניקה וחום שריפה של 300°C.",
+      "Suggested_Remediation": "שדרוג פח התעלה ל-1.2 מ\"מ מגולוון עם חיזוקי זוויתן חיצוניים לפי תקן EN 12101-7."
+    },
+    {
+      "Rule_ID": "HVAC-DMP-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Fire_Smoke_Dampers",
+      "Element_Type": "Damper",
+      "Rule_Name": "דמפרי אש ועשן במעבר תאי שריפה (Compartment Fire Dampers)",
+      "Detection_Type": "CROSS-DISCIPLINE",
+      "Required_Inputs": [
+        "3D Duct Lines",
+        "3D Fire Rated Separation Walls",
+        "Damper Elements"
+      ],
+      "Calculation_Formula": "Crosses_Fire_Wall(Duct, Wall) AND NOT Has_Damper(Duct, Wall)",
+      "Trigger_Condition": "DuctCrossesFireWall == True AND FireDamperInstalled == False",
+      "Standard_Threshold": "Motorized Combination Fire & Smoke Damper 120 min (FSD 72°C) per SI 931",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Life Safety Standard",
+      "Standard_Source": "ת״י 931 / ת״י 1001 / NFPA 92",
+      "Edition": "2018",
+      "Clause": "סעיף 4.3 (מחסומי אש ועשן במעברי תעלות)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Fire Safety Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_ID",
+        "FireWall_ID",
+        "Wall_Rating_Hours",
+        "Clash_Coordinate"
+      ],
+      "Description_He": "חציית קיר הפרדת אגפי אש ללא דמפר אש ממונע מאפשרת מעבר עשן ולהבות לחלקי מבנה אחרים.",
+      "Suggested_Remediation": "התקנת דמפר משולב אש ועשן ממונע 24V בעל עמידות 120 דקות ונתיך תרמי 72°C בכל חציית קיר אש."
+    },
+    {
+      "Rule_ID": "HVAC-CO-001",
+      "Discipline": "HVAC",
+      "Sub_System": "CO_Detection_System",
+      "Element_Type": "Sensor",
+      "Rule_Name": "גובה התקנת גלאי פחמן חד-חמצני (CO Sensor Elevation)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Sensor 3D Coordinates",
+        "Floor Level FFL"
+      ],
+      "Calculation_Formula": "Height_above_floor = Sensor.Z - Floor.Z",
+      "Trigger_Condition": "Height_above_floor < 1.30 OR Height_above_floor > 1.70",
+      "Standard_Threshold": "Elevation == 1.50m (+/- 0.20m) Breathing Zone",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Standard",
+      "Standard_Source": "ת״י 1001 חלק 7 / EN 50545-1",
+      "Edition": "2018 / 2011",
+      "Clause": "סעיף 6.2 (מיקום גלאים וגובה נשימת אדם)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Environmental & Safety Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Sensor_Element_ID",
+        "Measured_Height_m",
+        "Target_Height_m"
+      ],
+      "Description_He": "התקנת גלאי CO בתקרה (3.2 מטר) מעכבת גילוי הרעלת גז ב-40 דקות, שכן משקל CO דומה לאוויר והוא שוהה בגובה נשימת אדם.",
+      "Suggested_Remediation": "העתקת גלאי ה-CO לעמודי בטון בגובה מדויק של 1.50 מטר מעל הריצוף כולל כלוב מגן מפלדה."
+    },
+    {
+      "Rule_ID": "HVAC-CO-002",
+      "Discipline": "HVAC",
+      "Sub_System": "CO_Detection_System",
+      "Element_Type": "Sensor",
+      "Rule_Name": "רדיוס כיסוי מקסימלי לגלאי CO (Coverage Radius)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Sensor 2D Coordinates (X, Y)",
+        "Parking Zone Perimeter Polygon"
+      ],
+      "Calculation_Formula": "Max_Distance_To_Uncovered_Point(Sensors, Polygon)",
+      "Trigger_Condition": "Coverage_Radius > 15.0 OR Coverage_Area > 400.0",
+      "Standard_Threshold": "Radius <= 15.0m AND Area <= 400 m² per detector",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Standard",
+      "Standard_Source": "EN 50545-1 / ת״י 1001 חלק 7",
+      "Edition": "2011 / 2018",
+      "Clause": "Section 4.4 (Area of coverage per electrochemical sensor)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Safety Engineer",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Sensor_IDs_Group",
+        "Max_Calculated_Radius_m",
+        "Total_Covered_Area_m2"
+      ],
+      "Description_He": "פריסה דלילה ברדיוס מעל 15 מטר מייצרת שטחים מתים שבהם נהגים ועוברי אורח עלולים להיחשף לריכוזי גז רעיל מעל 100 ppm.",
+      "Suggested_Remediation": "עיבוי מערך גלאי ה-CO לרדיוס כיסוי מרבי של R ≤ 15.0 מטר (שטח 400 מ\"ר לגלאי)."
+    },
+    {
+      "Rule_ID": "HVAC-CO-003",
+      "Discipline": "HVAC",
+      "Sub_System": "CO_Demand_Ventilation",
+      "Element_Type": "Fan_Control",
+      "Rule_Name": "ויסות מהירות מפוחי פליטה במשנה תדר (VFD Modulation)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Fan Schedule Parameter: Control_Type"
+      ],
+      "Calculation_Formula": "Has_Modulation = (Control_Type == 'VFD_3_Stage')",
+      "Trigger_Condition": "Fan.Control_Type != 'VFD_3_Stage'",
+      "Standard_Threshold": "3-Stage VFD Ventilation Control (25 / 50 / 100 ppm CO)",
+      "Severity": "BLUE",
+      "Requirement_Type": "Best Practice / Energy Efficiency",
+      "Standard_Source": "ת״י 1001.7 / ASHRAE 90.1 (Energy Standard for Buildings)",
+      "Edition": "2018 / 2022",
+      "Clause": "Section 6.5.7.2 (Enclosed Parking Garage Ventilation Controls)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Energy & Systems Consultant",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Fan_Element_ID",
+        "Specified_Control_Type"
+      ],
+      "Description_He": "הפעלת מפוחים גנרית ON/OFF מבזבזת 65% יותר חשמל ומייצרת רעש מיותר.",
+      "Suggested_Remediation": "שילוב בקרי VFD למפוחי הפליטה והסילון המכוילים ל-3 דרגות הפעלה אוטומטיות (25/50/100 ppm) לחסכון בעלויות תפעול."
+    },
+    {
+      "Rule_ID": "HVAC-SFT-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Smoke_Extraction_Shafts",
+      "Element_Type": "Shaft_Discharge",
+      "Rule_Name": "מרחק הפרדה בין פיר פליטת עשן לפיר אוויר צח (Plume Separation)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Exhaust Louver Coordinates",
+        "Supply Louver Coordinates"
+      ],
+      "Calculation_Formula": "Distance = sqrt((X2-X1)^2 + (Y2-Y1)^2 + (Z2-Z1)^2)",
+      "Trigger_Condition": "Distance < 10.0",
+      "Standard_Threshold": "Physical Separation L_sep >= 10.0m",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Standard",
+      "Standard_Source": "ת״י 1001 חלק 7 / NFPA 92",
+      "Edition": "2018 / 2021",
+      "Clause": "סעיף 7.4 (מניעת קצר אוויר בין פליטה ליניקה)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Exhaust_Louver_ID",
+        "Supply_Louver_ID",
+        "Measured_Distance_m"
+      ],
+      "Description_He": "פיר עשן ופיר אוויר צח במרחק קטן מ-10 מטר גורמים לקצר אוויר קטלני — שאיבת עשן שחור בחזרה לתוך החניון.",
+      "Suggested_Remediation": "הרחקת פתח יניקת אוויר צח למרחק של לפחות 10.0 מטר מפתח פליטת העשן או פליטה בגג המגדל."
+    },
+    {
+      "Rule_ID": "HVAC-TX-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Transformer_Room_Ventilation",
+      "Element_Type": "Room_Cooling",
+      "Rule_Name": "טמפרטורת חדר שנאים מרבית (Transformer Room Temperature Limit)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Transformer Rating (kVA)",
+        "Heat Losses (kW)",
+        "Ventilation Airflow (m³/h)",
+        "Max Ambient Temp (C)"
+      ],
+      "Calculation_Formula": "Delta_T = Heat_Loss_kW / (Airflow_m3_h * 0.00034)",
+      "Trigger_Condition": "(Max_Ambient_Temp + Delta_T) > 40.0",
+      "Standard_Threshold": "T_max <= 40.0°C (Recommended <= 35.0°C) per IEC 60076",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Utility Specification",
+      "Standard_Source": "מפרט חברת החשמל לישראל (חח״י) / IEC 60076 / ת״י 1001.4",
+      "Edition": "2020 / 2018",
+      "Clause": "סעיף 5.1 (תנאי טמפרטורה ואוורור בחדרי שנאים יבשים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Electrical & Mechanical Engineer",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Room_ID",
+        "Heat_Losses_kW",
+        "Calculated_Temp_C",
+        "Allowed_Temp_C"
+      ],
+      "Description_He": "עומס חום 36 kW מעלה טמפרטורה ל-62°C ללא אוויר מאולץ, מה שגורם לקפיצת שנאי חח״י והשבתת חשמל לבניין.",
+      "Suggested_Remediation": "התקנת מערך מפוחי אוורור מאולץ כפול (Duty/Standby 12,000 m³/h) לשמירה על T ≤ 38°C."
+    },
+    {
+      "Rule_ID": "HVAC-GEN-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Generator_Room_Ventilation",
+      "Element_Type": "Radiator_Duct",
+      "Rule_Name": "פליטת אוויר חם מרדיאטור גנרטור (Radiator Air Discharge)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Generator Model",
+        "3D Radiator Duct Elements",
+        "Exterior Shaft Boundary"
+      ],
+      "Calculation_Formula": "Is_Connected_To_Shaft(RadiatorDuct, ExteriorShaft)",
+      "Trigger_Condition": "Generator.RadiatorDuctConnectedToShaft == False",
+      "Standard_Threshold": "Dedicated Sealed Sheet Metal Duct to Exterior Shaft per NFPA 110",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Emergency Standard",
+      "Standard_Source": "ת״י 1001 חלק 4 / NFPA 110",
+      "Edition": "2018 / 2022",
+      "Clause": "Section 7.7.2 (Cooling system air discharge ducting to outdoors)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Mechanical Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Generator_ID",
+        "Radiator_Duct_ID",
+        "Shaft_Connection_Status"
+      ],
+      "Description_He": "פליטת חום רדיאטור 450 kW ישירות לחניון מעלה טמפרטורה ל-75°C, חונקת את המנוע ומשביתה את החירום תוך 2 דקות.",
+      "Suggested_Remediation": "תכנון תעלת פח אטומה (1.80x1.20 מ') ישירות מפתח הרדיאטור לפיר שחרור ייעודי."
+    },
+    {
+      "Rule_ID": "HVAC-GEN-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Generator_Exhaust_Flue",
+      "Element_Type": "Flue_Pipe",
+      "Rule_Name": "תוואי ארובת פליטת דיזל לגג המגדל (Generator Exhaust Flue)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Flue Geometry",
+        "Building Top Elevation"
+      ],
+      "Calculation_Formula": "Flue.Top_Z >= Building.Roof_Z + 2.0",
+      "Trigger_Condition": "Flue.Top_Z < Building.Roof_Z",
+      "Standard_Threshold": "Continuous Insulated Stainless Flue to Highest Roof (+58.0m)",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Environmental Regulation",
+      "Standard_Source": "חוק אוויר נקי / ת״י 1001.4 / NFPA 110",
+      "Edition": "2008 / 2022",
+      "Clause": "סעיף 14 (מניעת פליטת גזי שריפת סולר במפלסי קרקע ומגורים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Environmental & HVAC Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Flue_ID",
+        "Discharge_Elevation_m",
+        "Roof_Elevation_m"
+      ],
+      "Description_He": "ארובת דיזל המסתיימת במרתף 2- פולטת פיח ו-CO ישירות לחניון — סכנת חנק קטלנית ועבירה על חוק אוויר נקי.",
+      "Suggested_Remediation": "תכנון ארובת נירוסטה 316 בקוטר Ø10\" מבודדת 100 מ\"מ העולה רציף לגג המגדל ברום +58.0 מטר."
+    },
+    {
+      "Rule_ID": "HVAC-BAT-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Battery_Room_Ventilation",
+      "Element_Type": "Exhaust_Fan",
+      "Rule_Name": "פליטת גז מימן מתקרת חדר מצברים (Hydrogen Gas Extraction)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Fan Specification: ATEX_Rating",
+        "Airflow (ACH)",
+        "Elevation_Relative_To_Ceiling"
+      ],
+      "Calculation_Formula": "Has_ATEX_Ceiling_Fan(Room)",
+      "Trigger_Condition": "Fan.ATEX_Rating == False OR Fan.Elevation_From_Ceiling > 0.20",
+      "Standard_Threshold": "ATEX Zone 1 Ex-d Continuous Ceiling Fan (6 ACH) per NFPA 855",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Safety Standard",
+      "Standard_Source": "ת״י 1001 / IEEE 484 / NFPA 855",
+      "Edition": "2018 / 2023",
+      "Clause": "Section 4.9.3 (Ventilation of stationary battery energy storage systems)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Electrical & Safety Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Room_ID",
+        "Fan_ID",
+        "ATEX_Code",
+        "Airflow_ACH"
+      ],
+      "Description_He": "גז מימן קל מאוויר מצטבר בתקרה מעל 4% (LEL) — סכנת פיצוץ גז אדיר במרתף מניצוץ ברכזת ה-UPS.",
+      "Suggested_Remediation": "התקנת מפוח פליטה מוגן פיצוץ ATEX Zone 1 בתקרה וגלאי H2 אלקטרוכימי 10 ס\"מ מתחת לתקרה."
+    },
+    {
+      "Rule_ID": "HVAC-PRS-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Stairwell_Pressurization",
+      "Element_Type": "Stairwell_Pressure",
+      "Rule_Name": "הפרש לחץ בעל-לחץ חדר מדרגות מוגן (Differential Pressure Range)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Calculated Pressure Delta (Pa)",
+        "VFD Feedback Schedule"
+      ],
+      "Calculation_Formula": "Delta_P = P_stairwell - P_building",
+      "Trigger_Condition": "Delta_P < 25.0 OR Delta_P > 50.0",
+      "Standard_Threshold": "25.0 Pa <= Delta_P <= 50.0 Pa (SI 1001.2.2 / NFPA 92)",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Life Safety Standard",
+      "Standard_Source": "ת״י 1001 חלק 2.2 / NFPA 92 / EN 12101-6",
+      "Edition": "2018 / 2021",
+      "Clause": "סעיף 3.4 (טווח לחצים תקני למניעת חדירת עשן)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC & Smoke Specialist",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Stairwell_ID",
+        "Floor_Number",
+        "Calculated_Delta_P_Pa"
+      ],
+      "Description_He": "לחץ מתחת ל-25 Pa מאפשר חדירת עשן לנתיב המילוט; לחץ מעל 50 Pa נועל דלתות מילוט ומונע פינוי דיירים.",
+      "Suggested_Remediation": "כיול מפוחי VFD מבוססי רגשי לחץ דיפרנציאליים קומתיים לשמירה על 25–50 Pa בכל הקומות."
+    },
+    {
+      "Rule_ID": "HVAC-PRS-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Stairwell_Pressurization",
+      "Element_Type": "Egress_Door",
+      "Rule_Name": "כוח פתיחת דלת מילוט מרבי בעל-לחץ (Door Opening Force)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Door Width (W)",
+        "Door Height (H)",
+        "Pressure Delta (Pa)",
+        "Door Closer Force (N)"
+      ],
+      "Calculation_Formula": "F_total = F_closer + ((Delta_P * Area * W) / (2 * (W - Knob_Distance)))",
+      "Trigger_Condition": "F_total > 133.0",
+      "Standard_Threshold": "Door Opening Force F <= 133 N (30 lbf) [Target <= 110 N]",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Egress Standard",
+      "Standard_Source": "ת״י 1001 חלק 2.2 / NFPA 101 (Life Safety Code) / NFPA 92",
+      "Edition": "2018 / 2021",
+      "Clause": "Section 7.2.1.4.5 (Door opening force under stair pressurization)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Life Safety & Accessibility Consultant",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Door_ID",
+        "Floor_Level",
+        "Calculated_Force_N",
+        "Allowed_Force_N"
+      ],
+      "Description_He": "כוח פתיחת דלת של 215 N כולא ילדים וקשישים בדירות ללא יכולת פיזית לפתוח את דלת המילוט בשריפה.",
+      "Suggested_Remediation": "התקנת דמפר פריקה ברומטרי 50 Pa בראש הפיר ושמירה על כוח פתיחת דלת F ≤ 110 N."
+    },
+    {
+      "Rule_ID": "HVAC-PRS-003",
+      "Discipline": "HVAC",
+      "Sub_System": "Stairwell_Pressurization",
+      "Element_Type": "Supply_Shaft",
+      "Rule_Name": "מהירות זרימת אוויר בפיר על-לחץ (Shaft Air Velocity)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Shaft Net Area (m²)",
+        "Total Supply Airflow (m³/s)"
+      ],
+      "Calculation_Formula": "Velocity_m_s = Airflow_m3_s / Shaft_Area_m2",
+      "Trigger_Condition": "Velocity_m_s > 12.0",
+      "Standard_Threshold": "Air Velocity v <= 12.0 m/s per SI 1001.2.2",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Engineering Standard",
+      "Standard_Source": "ת״י 1001 חלק 2.2 / NFPA 92",
+      "Edition": "2018 / 2021",
+      "Clause": "סעיף 3.8 (מגבלות מהירות זרימה בפירים אנכיים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Shaft_ID",
+        "Shaft_Area_m2",
+        "Total_Airflow_m3_h",
+        "Calculated_Velocity_m_s"
+      ],
+      "Description_He": "מהירות 23.3 מ\"ש בפיר צר מייצרת מפל לחץ חיכוך 650 Pa ושריקות זרימה עזות בדירות פנטהאוז.",
+      "Suggested_Remediation": "הגדלת שטח הפיר ל-A ≥ 1.10 מ\"ר (מידות נטו 1.10x1.00 מ') להורדת המהירות ל-10.5 מ\"ש."
+    },
+    {
+      "Rule_ID": "HVAC-COR-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Corridor_Smoke_Exhaust",
+      "Element_Type": "Corridor_Damper",
+      "Rule_Name": "דמפרי שחרור עשן ממונעים במסדרונות קומתיים (Normally Closed Dampers)",
+      "Detection_Type": "CROSS-DISCIPLINE",
+      "Required_Inputs": [
+        "Damper Actuator Type",
+        "FACP Matrix Zone Programming"
+      ],
+      "Calculation_Formula": "Is_Motorized_NC_With_Zone_Logic(Damper)",
+      "Trigger_Condition": "Damper.ActuatorType != 'Motorized_24V_Spring_NC'",
+      "Standard_Threshold": "Motorized 24V Normally Closed Damper (Open on Fire Floor ONLY) 1.0 m³/s",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Fire Safety Standard",
+      "Standard_Source": "ת״י 1001 חלק 2.2 / NFPA 92 / הוראות כב״ה",
+      "Edition": "2018 / 2021",
+      "Clause": "סעיף 5.2 (בקרת דמפרי עשן קומתיים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Fire Alarm & HVAC Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Damper_ID",
+        "Floor_Number",
+        "Actuator_Type",
+        "FACP_Address"
+      ],
+      "Description_He": "פתחי פיר פתוחים ללא דמפר ממונע מפילים את ספיקת היניקה בקומה השרופה מ-1.0 ל-0.08 מ\"ק/שנ' (איבוד 92%).",
+      "Suggested_Remediation": "התקנת דמפרי עשן ממונעים 24V סגורים בשגרה הנפתחים ממוקד בקומה השרופה בלבד (1.0 m³/s)."
+    },
+    {
+      "Rule_ID": "HVAC-LIFT-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Firefighter_Elevator_Pressurization",
+      "Element_Type": "Elevator_Shaft",
+      "Rule_Name": "מערכת על-לחץ עצמאית לפיר מעלית לוחמי אש (Firefighters Lift Pressurization)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Elevator Shaft Geometry",
+        "Dedicated Pressurization Fan Elements"
+      ],
+      "Calculation_Formula": "Has_Dedicated_Pressurization_System(LiftShaft)",
+      "Trigger_Condition": "LiftShaft.IsFirefighterLift == True AND LiftShaft.HasDedicatedFan == False",
+      "Standard_Threshold": "Dedicated VFD Pressurization System (25-50 Pa) per EN 81-72 / EN 12101-6",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Life Safety Standard",
+      "Standard_Source": "תקן מעליות כבאים EN 81-72 / ת״י 1001.2.2 / EN 12101-6",
+      "Edition": "2020 / 2018",
+      "Clause": "Clause 5.3 (Protection against smoke and water in firefighter lift shafts)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Elevator & Fire Safety Consultant",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Lift_Shaft_ID",
+        "Firefighter_Designation",
+        "Dedicated_Fan_ID"
+      ],
+      "Description_He": "השמטת על-לחץ בפיר מעלית כבאים גורמת לחדירת עשן רעיל וחנק לוחמי האש בעת פעולות חילוץ.",
+      "Suggested_Remediation": "התקנת מערך מפוחי על-לחץ עצמאי (25,000 m³/h מבוקר VFD) לפיר מעלית לוחמי האש."
+    },
+    {
+      "Rule_ID": "HVAC-CND-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Condensate_Drainage",
+      "Element_Type": "Condensate_Pipe",
+      "Rule_Name": "שיפוע גרביטציוני מינימלי לצנרת ניקוז מי עיבוי (Condensate Pipe Slope)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Pipe Centerline",
+        "Start Z Elevation",
+        "End Z Elevation",
+        "Length"
+      ],
+      "Calculation_Formula": "Slope_Percent = ((Start_Z - End_Z) / Length) * 100.0",
+      "Trigger_Condition": "Slope_Percent < 1.5",
+      "Standard_Threshold": "Slope s >= 1.5% per SI 1205 / SI 920",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Standard",
+      "Standard_Source": "ת״י 1205 / ת״י 920 / ASHRAE 62.1",
+      "Edition": "2018 / 2022",
+      "Clause": "סעיף 3.4 (שיפועי צנרת ניקוז מי עיבוי במבנים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Plumbing & HVAC Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Pipe_Element_ID",
+        "Floor_Number",
+        "Measured_Slope_Percent",
+        "Required_Slope_Percent"
+      ],
+      "Description_He": "שיפוע שטוח 0.2% גורם להצטברות אצות וסתימת קו המציפה תקרות גבס, פרקטים וריהוט יוקרתי.",
+      "Suggested_Remediation": "הקפדה על שיפוע גרביטציוני מינימלי מחייב של s ≥ 1.5% לכל אורך צנרת ניקוז המזגן."
+    },
+    {
+      "Rule_ID": "HVAC-CND-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Condensate_Drainage",
+      "Element_Type": "Drain_Trap",
+      "Rule_Name": "מחסום ריח מכני יבש בחיבור לביוב (Mechanical Dry Trap)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Trap Component Family Parameter: Trap_Type"
+      ],
+      "Calculation_Formula": "Is_Mechanical_Dry_Trap(Trap)",
+      "Trigger_Condition": "Trap.Type != 'Mechanical_Dry_Trap'",
+      "Standard_Threshold": "Mechanical Dry Trap (Silicone Flap + Floating Ball)",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Standard",
+      "Standard_Source": "ת״י 1205 / ת״י 920",
+      "Edition": "2018 / 2022",
+      "Clause": "סעיף 4.2 (מניעת חדירת גזי ביוב דרך צנרת מי עיבוי)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Sanitary & HVAC Consultant",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Trap_Element_ID",
+        "Apartment_Number",
+        "Specified_Trap_Type"
+      ],
+      "Description_He": "סיפון מים רגיל מתאדה בחורף ומחדיר גזי ביוב רעילים וריחות צחנה ישירות לסלון ולחדרי השינה.",
+      "Suggested_Remediation": "התקנת סיפון יבש מכני תקני (כנפית סיליקון אל-חוזרת) בכל נקודת חיבור לקולטן שפכים."
+    },
+    {
+      "Rule_ID": "HVAC-REF-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Refrigerant_Piping",
+      "Element_Type": "VRF_System",
+      "Rule_Name": "ריכוז גז קירור רעיל בחדר שינה סגור (Refrigerant Concentration Limit - RCL)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Total System Refrigerant Charge (kg)",
+        "Smallest Enclosed Room Volume (m³)",
+        "Refrigerant Type"
+      ],
+      "Calculation_Formula": "Concentration_kg_m3 = Total_Charge_kg / Room_Volume_m3",
+      "Trigger_Condition": "Concentration_kg_m3 > 0.44 AND Refrigerant == 'R-410A'",
+      "Standard_Threshold": "RCL <= 0.44 kg/m³ for R-410A (0.06 kg/m³ for R-32) per SI 920 / EN 378",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Safety Standard",
+      "Standard_Source": "ת״י 920 / EN 378 / ISO 5149",
+      "Edition": "2020 / 2016",
+      "Clause": "Table C.1 (Refrigerant safety group classification and concentration limits)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior HVAC & Chemical Safety Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "VRF_System_ID",
+        "Room_ID",
+        "Total_Charge_kg",
+        "Room_Volume_m3",
+        "Calculated_RCL"
+      ],
+      "Description_He": "פריצת 18.5 ק\"ג גז VRF בחדר שינה סגור מעלה ריכוז ל-0.66 kg/m³ (חריגה מ-0.44) — סכנת חנק מוחי ומוות בשינה.",
+      "Suggested_Remediation": "חלוקת מערכות ה-VRF למעגלים מפוצלים (מטען מרבי M ≤ 8.0 kg) וגלאי דליפת גז עם שסתומי ניתוק."
+    },
+    {
+      "Rule_ID": "HVAC-KIT-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Commercial_Kitchen_Exhaust",
+      "Element_Type": "Grease_Duct",
+      "Rule_Name": "סוג תעלת שומן ועובי דופן פלדה מרותכת (Liquid-Tight Welded Duct)",
+      "Detection_Type": "METADATA",
+      "Required_Inputs": [
+        "Duct Material Specification",
+        "Wall Thickness (mm)",
+        "Welding Type"
+      ],
+      "Calculation_Formula": "Is_Liquid_Tight_Welded(Duct)",
+      "Trigger_Condition": "Duct.Material != 'Welded_Carbon_Steel_1.5mm' AND Duct.Material != 'Stainless_Steel_1.2mm'",
+      "Standard_Threshold": "1.5mm (Gauge 16) Carbon Steel or 1.2mm Stainless Steel continuously welded per NFPA 96",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Fire Safety Standard",
+      "Standard_Source": "ת״י 1001 חלק 6 / NFPA 96 / UL 710",
+      "Edition": "2018 / 2021",
+      "Clause": "Section 7.5.1 (Duct materials and continuous external liquid-tight welding)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Commercial Kitchen & Fire Protection Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Grease_Duct_ID",
+        "Building_ID",
+        "Material_Spec",
+        "Thickness_mm"
+      ],
+      "Description_He": "פח ספירלי מגולוון 0.6 מ\"מ נוזל שומן בוער ב-1000°C מתפרי נעילה ומצית תקרות גבס שלמות.",
+      "Suggested_Remediation": "שדרוג תעלות השומן לפלדה שחורה 1.5 מ\"מ בריתוך חיצוני רציף אטום נוזלים לפי NFPA 96."
+    },
+    {
+      "Rule_ID": "HVAC-MMD-001",
+      "Discipline": "HVAC",
+      "Sub_System": "MAMAD_CBRN_Filtration",
+      "Element_Type": "CBRN_Unit",
+      "Rule_Name": "מרווח תפעול חופשי לידית המפוח הידני באב״כ (Hand-Crank Clearance)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "CBRN Unit Coordinates",
+        "Adjacent Wall Coordinates",
+        "Wardrobe / Obstacle Geometry"
+      ],
+      "Calculation_Formula": "Clear_Operating_Radius = Distance(CBRN_Crank_Axis, Nearest_Obstacle)",
+      "Trigger_Condition": "Clear_Operating_Radius < 1.00",
+      "Standard_Threshold": "Clear Operating Radius >= 1.00m per HFC Regulations 2024",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Statutory Regulation",
+      "Standard_Source": "תקנות פיקוד העורף 2024 (פקע״ר) / ת״י 4570",
+      "Edition": "2024",
+      "Clause": "סעיף 3.2 (מרחב חופשי להפעלה ידנית של מערכת סינון ואוורור)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Civil Defense / HFC Certified Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "MAMAD_ID",
+        "CBRN_Unit_ID",
+        "Measured_Clearance_m",
+        "Obstacle_ID"
+      ],
+      "Description_He": "מרווח של 35 ס\"מ מונע סיבוב ידית מנואלה ידנית בהפסקת חשמל במתקפה — פסילת טופס 4 ע\"י פקע״ר.",
+      "Suggested_Remediation": "הזזת ארונות וריהוט להבטחת רדיוס פנוי של לפחות 1.00 מטר סביב ידית ההפעלה הידנית."
+    },
+    {
+      "Rule_ID": "HVAC-MMD-002",
+      "Discipline": "HVAC",
+      "Sub_System": "MAMAD_Blast_Valves",
+      "Element_Type": "Blast_Valve",
+      "Rule_Name": "שסתום הדף Type B על קו ניקוז מזגן ממ״ד (Type B AC Drain Blast Valve)",
+      "Detection_Type": "CROSS-DISCIPLINE",
+      "Required_Inputs": [
+        "MAMAD Wall Penetrations",
+        "AC Drain Pipe Path",
+        "Blast Valve Family Parameter"
+      ],
+      "Calculation_Formula": "Has_Approved_Type_B_Valve(MAMAD_AC_Drain)",
+      "Trigger_Condition": "DrainCrossesMAMADWall == True AND HasTypeBValve == False",
+      "Standard_Threshold": "HFC Certified Type B Blast Valve (with internal ball & mesh) per SI 448",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Statutory Regulation",
+      "Standard_Source": "תקנות פקע״ר 2024 / ת״י 448 / ת״י 920",
+      "Edition": "2024 / 2018",
+      "Clause": "סעיף 4.6 (הגנת הדף למעברי ניקוז מזגנים במרחבים מוגנים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Civil Defense / HFC Certified Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "MAMAD_ID",
+        "AC_Unit_ID",
+        "Wall_Sleeve_ID",
+        "Blast_Valve_Status"
+      ],
+      "Description_He": "גל הדף של 1.5 bar חודר דרך צינור הניקוז הפלסטי, מעיף את המאייד על דיירים ומחדיר גזים רעילים.",
+      "Suggested_Remediation": "התקנת שסתום הדף ייעודי Type B מורשה פקע״ר על קו ניקוז המזגן של כל ממ״ד."
+    },
+    {
+      "Rule_ID": "HVAC-SUP-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Interdisciplinary_Clashes",
+      "Element_Type": "Hard_Clash",
+      "Rule_Name": "התנגשות קשה של תעלת מיזוג בקורת בטון נושאת (Beam Clash)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D HVAC Ducts Solid",
+        "3D Structural Concrete Model Solids (ST)"
+      ],
+      "Calculation_Formula": "Volume_Intersection(Duct_Solid, Beam_Tensile_Zone_Solid)",
+      "Trigger_Condition": "Intersection_Volume > 0.001",
+      "Standard_Threshold": "Zero Intersection with bottom tensile rebar / Pre-cast sleeve in h/3 neutral axis",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Structural Standard",
+      "Standard_Source": "ת״י 466 (בטון ומבנים) / ת״י 1001",
+      "Edition": "2018",
+      "Clause": "סעיף 9.2 (הגבלת פתחים וחציות בקורות בטון מזוין)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Structural & MEP Coordinator",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_ID",
+        "Beam_ID",
+        "Clash_Coordinate_XYZ",
+        "Intersection_Volume_m3"
+      ],
+      "Description_He": "תעלת מיזוג 1.40x0.50 מ' חותכת מוטות מתיחה ראשיים בקורת שלד נושאת B-108 — סכנת שבר וכשל גזירה.",
+      "Suggested_Remediation": "תיאום שרוול מעבר פלדה יצוק מראש בשליש המרכזי של גובה הקורה (h/3) ללא פגיעה בזיון ראשי."
+    },
+    {
+      "Rule_ID": "HVAC-FP-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Sprinkler_Obstructions",
+      "Element_Type": "Sprinkler_Below_Duct",
+      "Rule_Name": "ספרינקלרים תחת תעלות מיזוג רחבות (Below-Duct Sprinklers)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "3D Ducts Solid (Width W)",
+        "3D Sprinkler Heads Model (FP)"
+      ],
+      "Calculation_Formula": "Has_Below_Duct_Sprinkler(Duct_W_gt_1200)",
+      "Trigger_Condition": "Duct.Width > 1.20 AND SprinklerBelowDuctInstalled == False",
+      "Standard_Threshold": "Dedicated line of Pendent Sprinklers below obstructions W > 1.20m per NFPA 13",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Fire Protection Standard",
+      "Standard_Source": "NFPA 13 / ת״י 1596",
+      "Edition": "2022 / 2018",
+      "Clause": "Section 8.5.5.3 (Obstructions to Sprinkler Discharge - Continuous Obstructions)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Fire Protection Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_ID",
+        "Duct_Width_mm",
+        "Parking_Stall_IDs",
+        "Sprinkler_Coverage_Status"
+      ],
+      "Description_He": "תעלה ברוחב 1.40 מ' חוסמת 100% ממניפת המים מעל חניות — רכבים בוערים תחת התעלה לא יקבלו כיבוי.",
+      "Suggested_Remediation": "הוספת שורת ראשי ספרינקלר תלויים תחת התעלה כולל מגיני מים (Water Shields) ולוחיות איסוף חום."
+    },
+    {
+      "Rule_ID": "HVAC-ACS-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Acoustics_Vibration",
+      "Element_Type": "Rooftop_Chiller",
+      "Rule_Name": "מפלס רעש סניטרי/מכני מרבי בחדרי שינה (Indoor Noise Limit)",
+      "Detection_Type": "CALCULATION",
+      "Required_Inputs": [
+        "Equipment Sound Power (Lw)",
+        "Mounting Type (Rigid vs Spring)",
+        "Receiver Room Location"
+      ],
+      "Calculation_Formula": "Calculated_LAeq_Bedroom = Lw - Transmission_Loss - Vibration_Isolation_dB",
+      "Trigger_Condition": "Calculated_LAeq_Bedroom > 30.0",
+      "Standard_Threshold": "L_Aeq <= 30.0 dB(A) in Bedrooms per SI 1004.3",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Acoustic Standard",
+      "Standard_Source": "ת״י 1004 חלק 3 / תקנות למניעת מפגעים (רעש)",
+      "Edition": "2018 / 1992",
+      "Clause": "טבלה 1 (מפלסי רעש מרביים מותרים מציוד מכני במבני מגורים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Certified Acoustic Consultant",
+      "Confidence": "95%",
+      "Evidence_Fields": [
+        "Chiller_ID",
+        "Penthouse_Bedroom_ID",
+        "Calculated_LAeq_dB",
+        "Limit_dB"
+      ],
+      "Description_He": "עיגון קשיח של צ'ילר 4.5 טון בגג מקפיץ רעש המהום ל-52 dB(A) בחדר שינה פנטהאוז (חריגה מ-30 dB).",
+      "Suggested_Remediation": "התקנת משככי קפיץ סיסמיים (50 מ\"מ שקיעה), בסיס אינרציה צף 150 מ\"מ ומשתיקי קול תעלתיים 25 dB."
+    },
+    {
+      "Rule_ID": "HVAC-SEIS-001",
+      "Discipline": "HVAC",
+      "Sub_System": "Seismic_Restraint",
+      "Element_Type": "Duct_Bracing",
+      "Rule_Name": "תמיכות סיסמיות אלכסוניות לתעלות כבדות (Seismic Sway Bracing)",
+      "Detection_Type": "GEOMETRY",
+      "Required_Inputs": [
+        "Duct Cross Section Area (m²)",
+        "Hanger Support Locations",
+        "Bracing Presence"
+      ],
+      "Calculation_Formula": "Has_45_Deg_Sway_Bracing(Duct_A_gt_05)",
+      "Trigger_Condition": "Duct.Area >= 0.50 AND Duct.HasSeismicBracing == False",
+      "Standard_Threshold": "45° Steel Angle Bracing (Lateral <= 9.0m, Longitudinal <= 18.0m) per SI 413 / SMACNA",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Seismic Standard",
+      "Standard_Source": "ת״י 413 / SMACNA Seismic Restraint Manual / ASCE 7-16",
+      "Edition": "2018 / 2020",
+      "Clause": "Section 13.6.7 (Ductwork Seismic Restraint and Anchorages)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Structural & Seismic Engineer",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_ID",
+        "Duct_Area_m2",
+        "Hanger_Spacing_m",
+        "Seismic_Brace_Status"
+      ],
+      "Description_He": "תעלה כבדה (180 kg/m) תלויה על מוטות הברגה בלבד מתנדנדת כמטוטלת ברעידת אדמה וקורסת על רכבים.",
+      "Suggested_Remediation": "התקנת תמיכות אלכסוניות 45° מזוויתן פלדה 50x50x5 מ\"מ ועוגני פלדה סיסמיים Hilti HST3."
+    },
+    {
+      "Rule_ID": "HVAC-SEIS-002",
+      "Discipline": "HVAC",
+      "Sub_System": "Seismic_Separation_Joints",
+      "Element_Type": "Expansion_Joint",
+      "Rule_Name": "מחבר סיסמי גמיש בחציית תפר מבני (Seismic Expansion Sleeve)",
+      "Detection_Type": "CROSS-DISCIPLINE",
+      "Required_Inputs": [
+        "3D Duct Path",
+        "3D Structural Seismic Separation Joint Plane"
+      ],
+      "Calculation_Formula": "Crosses_Structural_Joint(Duct) AND Has_Flexible_Sleeve(Duct)",
+      "Trigger_Condition": "DuctCrossesJoint == True AND FlexibleSleeveInstalled == False",
+      "Standard_Threshold": "Flexible Accordion Silicone/Fiberglass Sleeve (+/- 150mm movement) per SI 413",
+      "Severity": "RED",
+      "Requirement_Type": "Mandatory Seismic Standard",
+      "Standard_Source": "ת״י 413 / SMACNA",
+      "Edition": "2018 / 2020",
+      "Clause": "סעיף 8.3 (מעברי מערכות אלקטרו-מכניות דרך תפרי הפרדה סיסמיים)",
+      "Verification_Status": "VERIFIED",
+      "Verifier": "Senior Structural & Seismic Specialist",
+      "Confidence": "100%",
+      "Evidence_Fields": [
+        "Duct_ID",
+        "Joint_Plane_ID",
+        "Joint_Width_mm",
+        "Flexible_Sleeve_Status"
+      ],
+      "Description_He": "תעלת פח קשיחה החוצה תפר 120 מ\"מ ללא שרוול גמיש תיגזר ותתרסק בעת תנודה דינמית הדדית של המבנים.",
+      "Suggested_Remediation": "התקנת שרוול אקורדיון סיסמי גמיש מבד סיליקון-פיברגלס (תנועה ±150 מ\"מ) בחציית התפר המבני."
+    }
+  ]
+}

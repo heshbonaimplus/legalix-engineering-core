@@ -1,0 +1,53 @@
+{
+  "project_name": "פרויקט לוד - ניר צבי (עמרם אברהם)",
+  "project_code": "3647",
+  "scope": "מגרשים 321, 339, 223 - סה\"כ 255 יח\"ד + מסחר וחניון תת-קרקעי (פודיום)",
+  "target_component": "חניון ופודיום (Lod_ST_PR_R25 + Lod_AR_PR)",
+  "standards_applicable": [
+    "ת\"י 466 חלק 1-2 (חוקת הבטון)",
+    "ת\"י 413 (רעידות אדמה ותכן סייסמי)",
+    "ת\"י 940 (קרקע וביסוס)",
+    "ת\"י 412 (עומסים אופייניים)",
+    "הנחיות מרחביות עיריית לוד ופקע\"ר"
+  ],
+  "sub_elements_audited": {
+    "foundation": {
+      "type": "רפסודה על כלונסאות (Piled-Raft Foundation)",
+      "calculation_sources": [
+        "bisus_x_bot_339_G.dxf",
+        "bisus_x_bot_339_F.dxf",
+        "bisus_x_bot_223_A.dxf",
+        "bisus_x_bot_321.dxf",
+        "bisus_y_bot_321.dxf",
+        "bisus_x_top_321-2.dxf",
+        "bisus_y_top_321-2.dxf"
+      ],
+      "reactions_source": "kk-bisus/km(-2)_all.dxf"
+    },
+    "basement_slabs": {
+      "levels": [
+        "מרתף 1-",
+        "מרתף 2-"
+      ],
+      "moments_dxfs": [
+        "מרתף -1/-mx.dxf",
+        "מרתף -1/-my.dxf",
+        "מרתף -1/+mx(-1).dxf",
+        "מרתף -1/+my(-1).dxf",
+        "km-2_תחתון X.dxf",
+        "km-2_תחתון Y.dxf",
+        "km-2_עליון X.dxf",
+        "km-2_עליון Y.dxf"
+      ]
+    },
+    "crane_and_temp_works": {
+      "crane_drawing": "עגורן/Lod_AR_PR - Floor Plan - מרתף 1.dwg"
+    },
+    "pneumatic_waste_and_infrastructure": {
+      "road_drawings": [
+        "גליון אזמיד כביש 4 - ריקטיק.dwg",
+        "אזמיד כביש 10 ריקטיק.dwg"
+      ]
+    }
+  }
+}
