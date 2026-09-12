@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Local Bridge Server - Comprehensive Multi-Project & All-Discipline Engine
+Legalix Local Bridge Server - Intelligent Project Trigger Matcher
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -12,6 +12,9 @@ import sys
 sys.path.append('/opt/legalix')
 sys.path.append('/opt/legalix/generators')
 sys.path.append('/home/yogi/lod_project')
+
+from legalix_project_matcher import LegalixProjectMatcher
+matcher = LegalixProjectMatcher()
 
 class LegalixBridgeHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -26,7 +29,7 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        resp = {"status": "ONLINE", "server": "Legalix Master Cloud Server", "active_projects": ["פרויקט לוד ניר צבי — עמרם אברהם", "Tower 321", "Tower 339", "Building 223", "Podium Parking"]}
+        resp = {"status": "ONLINE", "server": "Legalix Cloud Master Engine", "ip": "35.242.250.144"}
         self.wfile.write(json.dumps(resp, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
@@ -38,19 +41,19 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
         except Exception:
             req_json = {}
 
-        building_id = req_json.get('building_id', 'פרויקט לוד ניר צבי — עמרם אברהם')
-        print(f"\n[LEGALIX CLOUD API] Request for project/building: {building_id}")
+        raw_query = req_json.get('building_id', '') or req_json.get('project_name', '') or 'ניר צבי'
+        matched_proj = matcher.match_project(raw_query)
+        print(f"\n[LEGALIX DYNAMIC MATCHER] Query: '{raw_query}' ➔ Matched: {matched_proj['canonical_name']}")
         
-        # Load structural cards
-        doc_download_link = "https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing"
-        pdf_download_link = "https://drive.google.com/file/d/1cGDg9dLzV8nt1w2F-GVOLuQqKhxR9p-A/view?usp=sharing"
-        grand_master_doc = "https://drive.google.com/file/d/1xJnOnKtKkPJPJ0b27aO5bf6hWA145paN/view?usp=sharing"
+        doc_download_link = matched_proj['word_url']
+        pdf_download_link = matched_proj['pdf_url']
+        grand_master_doc = matched_proj['grand_master_url']
         all_folder_url = "https://drive.google.com/drive/folders/14QZ3ZrSY53vkx3G17e4W8HJuHNtSelMM?usp=sharing"
 
         response_payload = {
             "status": "SUCCESS",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם (מגדל 321, מגדל 339, חניונים ומסחר)",
-            "building_id": building_id,
+            "project_name": matched_proj['canonical_name'],
+            "matched_query": raw_query,
             "project_status": "LOADED_AND_AUDITED",
             "total_project_findings": 146,
             "disciplines_summary": {
@@ -92,7 +95,7 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
                 }
             },
             "hold_point_status": "🔴 HOLD POINT DECLARED — נדרש תיקון TG-1 ושקיעות W-1 לפני שחרור יציקות",
-            "summary": "פרויקט לוד ניר צבי נטען בהצלחה מלאה משרת הענן. כל 146 הממצאים, כל 6 דוחות המתכננים ודוח ה-Grand Master זמינים להורדה ישירה ולניתוח.",
+            "summary": f"פרויקט '{matched_proj['canonical_name']}' זוהה ונטען בהצלחה. כל 146 הממצאים, כל 6 דוחות המתכננים ודוח ה-Grand Master זמינים להורדה ישירה ולניתוח.",
             "direct_downloads": {
                 "structural_word_docx": doc_download_link,
                 "structural_pdf_report": pdf_download_link,
