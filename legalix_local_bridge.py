@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Unified Master Multi-Discipline Server
+Legalix Unified Master Bridge Server — Engineering + TaxLand + 13-Agent Litigation War-Room (GCP Cloud)
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -15,10 +15,11 @@ sys.path.append('/home/yogi/lod_project')
 
 from legalix_omni_discipline_resolver import resolve_discipline_payload
 from legalix_taxland_engine import LegalixTaxLandEngine
+from legalix_war_room_engine import LegalixLeadCaseOrchestrator
 
 tax_engine = LegalixTaxLandEngine()
 
-class LegalixBridgeHandler(BaseHTTPRequestHandler):
+class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -31,7 +32,16 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        resp = {"status": "ONLINE", "server": "Legalix Cloud Master Engine (35.242.250.144)"}
+        resp = {
+            "status": "ONLINE",
+            "server": "Legalix Master Cloud Engine (35.242.250.144)",
+            "active_modules": [
+                "Legalix Engineering (14 Disciplines + FEA)",
+                "Legalix TaxLand (Real Estate Tax & 49Z)",
+                "Legalix Litigation War-Room (13 Autonomous Sub-Agents)"
+            ],
+            "active_cases": ["תיק פולינר ואורמקס אגרו (ת״א 62449-03-24)", "פרויקט לוד ניר צבי — עמרם אברהם"]
+        }
         self.wfile.write(json.dumps(resp, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
@@ -44,10 +54,46 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
             req_json = {}
 
         path = self.path.lower()
-        print(f"\n[LEGALIX MULTI-DISCIPLINE API] POST request: {path} | Payload: {req_json}")
+        print(f"\n[LEGALIX MASTER API] Inbound Request path: {path} | Data: {req_json}")
 
-        # Route 1: TaxLand
-        if "tax" in path or req_json.get("module") == "taxland":
+        # --- ROUTE 1: LITIGATION WAR-ROOM (13 SUB-AGENTS) ---
+        if any(w in path or w in str(req_json) for w in ["war_room", "litigation", "poliner", "פולינר", "אורמקס", "תביעה", "הגנה", "משפט"]):
+            case_id = "CASE-POLINER-62449-03-24"
+            case_title = "פולינר ואורמקס אגרו בע״מ נ' עיריית חדרה ואח' (ת״א 62449-03-24 מחוזי חיפה, כב' השופט מאזן דאוד)"
+            orchestrator = LegalixLeadCaseOrchestrator(case_id, case_title)
+            analysis_result = orchestrator.execute_full_war_room_audit({
+                "documents": [
+                    "כתב תביעה (148 עמודים)",
+                    "כתב הגנה (487 עמודים)",
+                    "הודעת צד ג (92 עמודים)",
+                    "כתב הגנה צד ג 1 (129 עמודים)",
+                    "חוות דעת שמאית מומחית ביהמ״ש אילת אלזנר (30 עמודים)"
+                ]
+            })
+            response_payload = {
+                "status": "SUCCESS",
+                "module": "Legalix Litigation War-Room",
+                "case_id": case_id,
+                "case_title": case_title,
+                "appraisal_summary": {
+                    "expert_appraiser": "אילת אלזנר (מומחית בית המשפט)",
+                    "property": "גוש 12798 חלקות 67+68 (מתחם אגרובנק חדרה)",
+                    "unlawful_seizure_area_sqm": 2667,
+                    "seizure_period_years": 4.5,
+                    "primary_valuation_nis": 1878000.0,
+                    "secondary_reservoir_valuation_nis": 657149.0,
+                    "total_claim_with_restoration_and_interest_nis": 3500000.0
+                },
+                "war_room_intelligence": analysis_result,
+                "downloads": {
+                    "war_room_docx": "https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing",
+                    "appraisal_analysis_docx": "https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing"
+                },
+                "summary": "תיק פולינר ואורמקס אגרו נפתח ונותח בהצלחה ע״י 13 סוכני חדר המלחמה של Legalix."
+            }
+
+        # --- ROUTE 2: TAXLAND (REAL ESTATE TAX) ---
+        elif "tax" in path or req_json.get("module") == "taxland":
             sale_price = float(req_json.get("sale_price", 3500000))
             purchase_price = float(req_json.get("purchase_price", 1000000))
             p_date = req_json.get("purchase_date", "2005-01-01")
@@ -68,7 +114,7 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
                 "summary": "חישוב מס שבח ליניארי מוטב הושלם בהצלחה ע״י Legalix TaxLand."
             }
 
-        # Route 2: Engineering (HVAC, Plumbing, Electrical, Structure, Landscape, Marketing)
+        # --- ROUTE 3: ENGINEERING (14 DISCIPLINES) ---
         else:
             raw_query = str(req_json.get('building_id', '') or req_json.get('discipline', '') or req_json.get('project_name', '') or '')
             response_payload = resolve_discipline_payload(raw_query)
@@ -81,8 +127,8 @@ class LegalixBridgeHandler(BaseHTTPRequestHandler):
 
 def run_server(port=8080):
     server_address = ('0.0.0.0', port)
-    httpd = HTTPServer(server_address, LegalixBridgeHandler)
-    print(f"Legalix Multi-Discipline Server is running on port {port}...")
+    httpd = HTTPServer(server_address, LegalixMasterBridgeHandler)
+    print(f"Legalix Master Unified Server running on port {port}...")
     httpd.serve_forever()
 
 if __name__ == '__main__':
