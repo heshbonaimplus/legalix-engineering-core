@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Unified Master Remote MCP Server — Claude Mobile & Web Compatible (JSON-RPC 2.0 & REST)
+Legalix Dynamic Remote MCP Server — Zero Mock, Real Disk & Skills Gateway
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -12,17 +12,16 @@ import sys
 sys.path.append('/opt/legalix')
 sys.path.append('/home/yogi/lod_project')
 
-from legalix_omni_discipline_resolver import resolve_discipline_payload
+from legalix_real_dynamic_gateway import get_case_data
 from legalix_taxland_engine import LegalixTaxLandEngine
-from legalix_megacase_agent_standalone import LegalixMegaCaseAgent
+from legalix_omni_discipline_resolver import resolve_discipline_payload
 
 tax_engine = LegalixTaxLandEngine()
-megacase_agent = LegalixMegaCaseAgent()
 
 MCP_TOOLS_MANIFEST = [
     {
         "name": "legalix_mega_case",
-        "description": "חדר המלחמה המשפטי של Legalix Mega-Case: ניתוח עומק של תיקי ענק, סתירות כירורגיות, ציר זמן מלא וחקירה נגדית ע״י 13 סוכני-משנה מומחים.",
+        "description": "חדר המלחמה המשפטי של Legalix Mega-Case: ניתוח עומק של תיקי ענק, סתירות כירורגיות וציר זמן דינמי מתוך 13 המחסנים המאונדקסים.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -73,7 +72,7 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
         self.end_headers()
         resp = {
             "status": "ONLINE",
-            "server": "Legalix Cloud Master Remote MCP Engine (35.242.250.144)",
+            "server": "Legalix Master Dynamic Gateway (Zero-Mock Engine)",
             "tools": [t["name"] for t in MCP_TOOLS_MANIFEST]
         }
         self.wfile.write(json.dumps(resp, ensure_ascii=False).encode('utf-8'))
@@ -87,7 +86,6 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
         except Exception:
             req_json = {}
 
-        # Handle Standard JSON-RPC 2.0 (Claude Remote MCP Protocol)
         if "jsonrpc" in req_json:
             method = req_json.get("method")
             req_id = req_json.get("id")
@@ -99,7 +97,7 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
                     "result": {
                         "protocolVersion": "2024-11-05",
                         "capabilities": {"tools": {}},
-                        "serverInfo": {"name": "legalix-mega-case-cloud", "version": "1.0.0"}
+                        "serverInfo": {"name": "legalix-mega-case-dynamic", "version": "2.0.0"}
                     }
                 }
             elif method == "tools/list":
@@ -114,7 +112,9 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
                 args = params.get("arguments", {})
                 
                 if tool_name == "legalix_mega_case":
-                    res = megacase_agent.run_investigation(args.get("case_id", "CASE-POLINER"), args.get("query", ""))
+                    case_id = args.get("case_id", "")
+                    query = args.get("query", "")
+                    res = get_case_data(case_id, query)
                     content_text = json.dumps(res, ensure_ascii=False, indent=2)
                 elif tool_name == "legalix_taxland_autonomous_agent":
                     res = tax_engine.calculate_betterment_tax_linear(
@@ -143,30 +143,18 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(reply, ensure_ascii=False).encode('utf-8'))
             return
 
-        # Handle Standard REST APIs
-        path = self.path.lower()
-        if "taxland" in path:
-            res = tax_engine.calculate_betterment_tax_linear(
-                purchase_price=float(req_json.get("purchase_price", 1000000)),
-                sale_price=float(req_json.get("sale_price", 3500000)),
-                purchase_date_str=req_json.get("purchase_date", "2005-01-01"),
-                sale_date_str="2026-06-01"
-            )
-        elif "mega_case" in path or "poliner" in str(req_json):
-            res = megacase_agent.run_investigation("CASE-POLINER-62449-03-24", str(req_json))
-        else:
-            res = resolve_discipline_payload(str(req_json.get("building_id", "")))
-
+        # Direct REST API
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
+        res = get_case_data(str(req_json.get("case_id", "")))
         self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
 
 def run_server(port=8080):
     server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, LegalixMasterBridgeHandler)
-    print(f"Legalix Master Remote MCP Server running on port {port}...")
+    print(f"Legalix Master Dynamic Server running on port {port}...")
     httpd.serve_forever()
 
 if __name__ == '__main__':
