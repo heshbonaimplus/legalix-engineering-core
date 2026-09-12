@@ -1,0 +1,45 @@
+{
+  "total_claim_amount_nis": 3500000.0,
+  "appraisal_primary_valuation_nis": 1878000.0,
+  "appraisal_reservoir_alternative_nis": 657149.0,
+  "restoration_and_earthwork_damages_nis": 1250000.0,
+  "legal_and_expert_fees_nis": 180000.0,
+  "yearly_usage_fees_breakdown": [
+    {
+      "year": "2015",
+      "period": "2/12",
+      "land_value_dunam": 1400000,
+      "fee_nis": 37338
+    },
+    {
+      "year": "2016",
+      "period": "12/12",
+      "land_value_dunam": 2100000,
+      "fee_nis": 336042
+    },
+    {
+      "year": "2017",
+      "period": "12/12",
+      "land_value_dunam": 2400000,
+      "fee_nis": 384048
+    },
+    {
+      "year": "2018",
+      "period": "12/12",
+      "land_value_dunam": 2700000,
+      "fee_nis": 432054
+    },
+    {
+      "year": "2019",
+      "period": "12/12",
+      "land_value_dunam": 3200000,
+      "fee_nis": 512064
+    },
+    {
+      "year": "2020",
+      "period": "4/12",
+      "land_value_dunam": 3300000,
+      "fee_nis": 176022
+    }
+  ]
+}
