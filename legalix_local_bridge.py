@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Unified Master Bridge Server — Engineering + TaxLand + 13-Agent Litigation War-Room (GCP Cloud)
+Legalix Unified Master Remote MCP Server — Claude Mobile & Web Compatible (JSON-RPC 2.0 & REST)
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -10,14 +10,53 @@ import os
 import sys
 
 sys.path.append('/opt/legalix')
-sys.path.append('/opt/legalix/generators')
 sys.path.append('/home/yogi/lod_project')
 
 from legalix_omni_discipline_resolver import resolve_discipline_payload
 from legalix_taxland_engine import LegalixTaxLandEngine
-from legalix_war_room_engine import LegalixLeadCaseOrchestrator
+from legalix_megacase_agent_standalone import LegalixMegaCaseAgent
 
 tax_engine = LegalixTaxLandEngine()
+megacase_agent = LegalixMegaCaseAgent()
+
+MCP_TOOLS_MANIFEST = [
+    {
+        "name": "legalix_mega_case",
+        "description": "חדר המלחמה המשפטי של Legalix Mega-Case: ניתוח עומק של תיקי ענק, סתירות כירורגיות, ציר זמן מלא וחקירה נגדית ע״י 13 סוכני-משנה מומחים.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "case_id": {"type": "string", "description": "מזהה התיק"},
+                "query": {"type": "string", "description": "שאלת החקירה או הנושא המבוקש"}
+            },
+            "required": ["case_id"]
+        }
+    },
+    {
+        "name": "legalix_taxland_autonomous_agent",
+        "description": "סוכן OpenClaw האוטונומי של TaxLand: תכנון מס מקרקעין רב-מסלולי (ליניארי מוטב 48א, פיצול 49ז, פריסת מס 48א(ה), בקרת Red Team ושליפת נמדר).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sale_price": {"type": "number", "description": "שווי מכירה"},
+                "purchase_price": {"type": "number", "description": "שווי רכישה"},
+                "purchase_date": {"type": "string", "description": "יום רכישה (YYYY-MM-DD)"}
+            },
+            "required": ["sale_price", "purchase_price"]
+        }
+    },
+    {
+        "name": "audit_structural_model",
+        "description": "בקרת תכן הנדסית רב-תחומית (שלד, אינסטלציה, מיזוג, חשמל, פיתוח ומכר) מבית Legalix Engineering.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "building_id": {"type": "string", "description": "שם הפרויקט או הדיסציפלינה"}
+            },
+            "required": ["building_id"]
+        }
+    }
+]
 
 class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -34,13 +73,8 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
         self.end_headers()
         resp = {
             "status": "ONLINE",
-            "server": "Legalix Master Cloud Engine (35.242.250.144)",
-            "active_modules": [
-                "Legalix Engineering (14 Disciplines + FEA)",
-                "Legalix TaxLand (Real Estate Tax & 49Z)",
-                "Legalix Litigation War-Room (13 Autonomous Sub-Agents)"
-            ],
-            "active_cases": ["תיק פולינר ואורמקס אגרו (ת״א 62449-03-24)", "פרויקט לוד ניר צבי — עמרם אברהם"]
+            "server": "Legalix Cloud Master Remote MCP Engine (35.242.250.144)",
+            "tools": [t["name"] for t in MCP_TOOLS_MANIFEST]
         }
         self.wfile.write(json.dumps(resp, ensure_ascii=False).encode('utf-8'))
 
@@ -53,82 +87,86 @@ class LegalixMasterBridgeHandler(BaseHTTPRequestHandler):
         except Exception:
             req_json = {}
 
+        # Handle Standard JSON-RPC 2.0 (Claude Remote MCP Protocol)
+        if "jsonrpc" in req_json:
+            method = req_json.get("method")
+            req_id = req_json.get("id")
+            
+            if method == "initialize":
+                reply = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "legalix-mega-case-cloud", "version": "1.0.0"}
+                    }
+                }
+            elif method == "tools/list":
+                reply = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {"tools": MCP_TOOLS_MANIFEST}
+                }
+            elif method == "tools/call":
+                params = req_json.get("params", {})
+                tool_name = params.get("name")
+                args = params.get("arguments", {})
+                
+                if tool_name == "legalix_mega_case":
+                    res = megacase_agent.run_investigation(args.get("case_id", "CASE-POLINER"), args.get("query", ""))
+                    content_text = json.dumps(res, ensure_ascii=False, indent=2)
+                elif tool_name == "legalix_taxland_autonomous_agent":
+                    res = tax_engine.calculate_betterment_tax_linear(
+                        purchase_price=float(args.get("purchase_price", 1000000)),
+                        sale_price=float(args.get("sale_price", 3500000)),
+                        purchase_date_str=args.get("purchase_date", "2005-01-01"),
+                        sale_date_str="2026-06-01"
+                    )
+                    content_text = json.dumps(res, ensure_ascii=False, indent=2)
+                else:
+                    res = resolve_discipline_payload(args.get("building_id", "שלד"))
+                    content_text = json.dumps(res, ensure_ascii=False, indent=2)
+
+                reply = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {"content": [{"type": "text", "text": content_text}]}
+                }
+            else:
+                reply = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": "Method not found"}}
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(reply, ensure_ascii=False).encode('utf-8'))
+            return
+
+        # Handle Standard REST APIs
         path = self.path.lower()
-        print(f"\n[LEGALIX MASTER API] Inbound Request path: {path} | Data: {req_json}")
-
-        # --- ROUTE 1: LITIGATION WAR-ROOM (13 SUB-AGENTS) ---
-        if any(w in path or w in str(req_json) for w in ["war_room", "litigation", "poliner", "פולינר", "אורמקס", "תביעה", "הגנה", "משפט"]):
-            case_id = "CASE-POLINER-62449-03-24"
-            case_title = "פולינר ואורמקס אגרו בע״מ נ' עיריית חדרה ואח' (ת״א 62449-03-24 מחוזי חיפה, כב' השופט מאזן דאוד)"
-            orchestrator = LegalixLeadCaseOrchestrator(case_id, case_title)
-            analysis_result = orchestrator.execute_full_war_room_audit({
-                "documents": [
-                    "כתב תביעה (148 עמודים)",
-                    "כתב הגנה (487 עמודים)",
-                    "הודעת צד ג (92 עמודים)",
-                    "כתב הגנה צד ג 1 (129 עמודים)",
-                    "חוות דעת שמאית מומחית ביהמ״ש אילת אלזנר (30 עמודים)"
-                ]
-            })
-            response_payload = {
-                "status": "SUCCESS",
-                "module": "Legalix Litigation War-Room",
-                "case_id": case_id,
-                "case_title": case_title,
-                "appraisal_summary": {
-                    "expert_appraiser": "אילת אלזנר (מומחית בית המשפט)",
-                    "property": "גוש 12798 חלקות 67+68 (מתחם אגרובנק חדרה)",
-                    "unlawful_seizure_area_sqm": 2667,
-                    "seizure_period_years": 4.5,
-                    "primary_valuation_nis": 1878000.0,
-                    "secondary_reservoir_valuation_nis": 657149.0,
-                    "total_claim_with_restoration_and_interest_nis": 3500000.0
-                },
-                "war_room_intelligence": analysis_result,
-                "downloads": {
-                    "war_room_docx": "https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing",
-                    "appraisal_analysis_docx": "https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing"
-                },
-                "summary": "תיק פולינר ואורמקס אגרו נפתח ונותח בהצלחה ע״י 13 סוכני חדר המלחמה של Legalix."
-            }
-
-        # --- ROUTE 2: TAXLAND (REAL ESTATE TAX) ---
-        elif "tax" in path or req_json.get("module") == "taxland":
-            sale_price = float(req_json.get("sale_price", 3500000))
-            purchase_price = float(req_json.get("purchase_price", 1000000))
-            p_date = req_json.get("purchase_date", "2005-01-01")
-            s_date = req_json.get("sale_date", "2026-06-01")
-            expenses = float(req_json.get("expenses", 100000))
-
-            res_tax = tax_engine.calculate_betterment_tax_linear(
-                purchase_price=purchase_price,
-                sale_price=sale_price,
-                purchase_date_str=p_date,
-                sale_date_str=s_date,
-                expenses=expenses
+        if "taxland" in path:
+            res = tax_engine.calculate_betterment_tax_linear(
+                purchase_price=float(req_json.get("purchase_price", 1000000)),
+                sale_price=float(req_json.get("sale_price", 3500000)),
+                purchase_date_str=req_json.get("purchase_date", "2005-01-01"),
+                sale_date_str="2026-06-01"
             )
-            response_payload = {
-                "status": "SUCCESS",
-                "module": "Legalix TaxLand",
-                "calculation_results": res_tax,
-                "summary": "חישוב מס שבח ליניארי מוטב הושלם בהצלחה ע״י Legalix TaxLand."
-            }
-
-        # --- ROUTE 3: ENGINEERING (14 DISCIPLINES) ---
+        elif "mega_case" in path or "poliner" in str(req_json):
+            res = megacase_agent.run_investigation("CASE-POLINER-62449-03-24", str(req_json))
         else:
-            raw_query = str(req_json.get('building_id', '') or req_json.get('discipline', '') or req_json.get('project_name', '') or '')
-            response_payload = resolve_discipline_payload(raw_query)
+            res = resolve_discipline_payload(str(req_json.get("building_id", "")))
 
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps(response_payload, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
 
 def run_server(port=8080):
     server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, LegalixMasterBridgeHandler)
-    print(f"Legalix Master Unified Server running on port {port}...")
+    print(f"Legalix Master Remote MCP Server running on port {port}...")
     httpd.serve_forever()
 
 if __name__ == '__main__':
