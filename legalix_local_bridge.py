@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Local Bridge Server - Real-Time Multi-Discipline Engine
+Legalix Unified Master Multi-Discipline Server
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
