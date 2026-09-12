@@ -5,16 +5,18 @@ Legalix Production 24/7 Cloud Host Runner (Permanent Daemon)
 """
 import subprocess, time, sys, os
 
-# Kill any existing processes
-subprocess.run("sudo pkill -f cloudflared; sudo pkill -f legalix_local_bridge", shell=True)
+# Clean logs & processes
+subprocess.run("sudo pkill -f cloudflared; sudo pkill -f legalix_local_bridge; sudo rm -f /tmp/server.log /tmp/tunnel.log", shell=True)
 time.sleep(1)
 
-# Start bridge on port 8080 in background
-subprocess.Popen(["sudo", "nohup", "/opt/legalix/venv/bin/python3", "/opt/legalix/legalix_local_bridge.py", "8080"], stdout=open("/tmp/server.log", "w"), stderr=subprocess.STDOUT)
+# Start bridge
+with open("/tmp/server.log", "w") as s_log:
+    subprocess.Popen(["sudo", "/opt/legalix/venv/bin/python3", "/opt/legalix/legalix_local_bridge.py", "8080"], stdout=s_log, stderr=subprocess.STDOUT)
 time.sleep(2)
 
-# Start cloudflared in background writing to /tmp/tunnel.log
-subprocess.Popen(["sudo", "nohup", "/usr/local/bin/cloudflared", "tunnel", "--url", "http://localhost:8080"], stdout=open("/tmp/tunnel.log", "w"), stderr=subprocess.STDOUT)
+# Start cloudflared
+with open("/tmp/tunnel.log", "w") as t_log:
+    subprocess.Popen(["sudo", "/usr/local/bin/cloudflared", "tunnel", "--url", "http://localhost:8080"], stdout=t_log, stderr=subprocess.STDOUT)
 
 # Read URL from log
 print("Connecting Cloudflare Tunnel to Google Cloud...")
@@ -35,7 +37,7 @@ for _ in range(30):
 
 if url:
     print("\n=======================================================")
-    print(f"🚀 LEGALIX LIVE PRODUCTION URL FOR CHATGPT:")
+    print(f"LEGALIX LIVE PRODUCTION URL FOR CHATGPT:")
     print(f"{url}")
     print("=======================================================\n")
     print("Server is running permanently in background (24/7)!")
