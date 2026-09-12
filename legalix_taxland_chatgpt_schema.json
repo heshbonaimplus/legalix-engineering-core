@@ -1,0 +1,97 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix TaxLand Master Live API",
+    "description": "API רשמי לתכנון מס מקרקעין, מס שבח ליניארי מוטב, סעיף 49ז, מס רכישה ודירת מגורים מזכה מבית Legalix",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://smilies-captured-batch-cgi.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/taxland-plan": {
+      "post": {
+        "summary": "הרצת תכנון מס מקרקעין רב-מסלולי וחישוב שומות מס מדויקות",
+        "operationId": "calculateTaxLandPlan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "calculation_type": {
+                    "type": "string",
+                    "enum": ["linear_betterment", "section_49z", "purchase_tax", "inheritance_gift"],
+                    "description": "סוג תחשיב המס המבוקש"
+                  },
+                  "sale_price": {
+                    "type": "number",
+                    "description": "שווי מכירה כולל בש\"ח"
+                  },
+                  "purchase_price": {
+                    "type": "number",
+                    "description": "שווי רכישה היסטורי בש\"ח"
+                  },
+                  "purchase_date": {
+                    "type": "string",
+                    "description": "תאריך רכישה (YYYY-MM-DD)"
+                  },
+                  "sale_date": {
+                    "type": "string",
+                    "description": "תאריך מכירה משוער (YYYY-MM-DD)"
+                  },
+                  "expenses": {
+                    "type": "number",
+                    "description": "סך הוצאות מוכרות לפי סעיף 39 (שכ\"ט, השבחה, שיפוצים)"
+                  },
+                  "building_rights": {
+                    "type": "boolean",
+                    "description": "האם שווי המכירה הושפע מזכויות בנייה נוספות (סעיף 49ז)"
+                  },
+                  "residence_value": {
+                    "type": "number",
+                    "description": "שווי דירת המגורים בלבד ללא זכויות בנייה (לצורך 49ז)"
+                  },
+                  "is_single_residence": {
+                    "type": "boolean",
+                    "description": "האם זו דירת מגורים יחידה של המוכר/הרוכש"
+                  }
+                },
+                "required": ["calculation_type", "sale_price", "purchase_price", "purchase_date"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאות תכנון המס המלאות, חלופות והמלצות",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "module": { "type": "string" },
+                    "calculation_results": { "type": "object" },
+                    "planning_recommendations": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "authority_sources": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "summary": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
