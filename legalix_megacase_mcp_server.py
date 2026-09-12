@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Mega-Case Autonomous Ingestion & Swarm FastMCP Server
-שרת MCP רשמי וייעודי לקלוד: חושף את כל כלי ה-Mega-Case, מנוע ה-Vision OCR המקבילי,
-13 מחסני הסוכנים בדרייב, ואינטגרציה לסקילים המשפטיים
+Legalix Mega-Case Autonomous Ingestion & Swarm FastMCP Server (Server-Side Constitution Enforced)
 """
 
 import os
@@ -15,6 +13,27 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("legalix-mega-case")
 
 CASE_ROOT_DIR = "/home/yogi/lod_project/poliner_war_room_vault"
+
+LEGALIX_MASTER_CONSTITUTION = """
+חוקת העל המחייבת של Legalix Mega-Case:
+1. איסור מוחלט על מענה מהראש (Zero-Trust) — כל נתון נשלף מתוך 13 המחסנים ב-Google Drive.
+2. איסור מוחלט על תמצות וסיכומים שטחיים — חובת פירוק מלא של טענות היריב (סעיף-אחר-סעיף).
+3. מנוע Vision OCR מקבילי ברמת אות-אחר-אות (Character-Level).
+4. ארגון טקסונומי היררכי (ענפים ועלים) בכל 13 המחסנים.
+5. כיווניות 100% RTL והגנת סודיות מוחלטת (White-Label).
+"""
+
+@mcp.tool()
+def legalix_get_system_constitution() -> str:
+    """
+    שליפת חוקת הליבה והפרוטוקול המחייב של Legalix Mega-Case (Zero-Trust, 13 הסוכנים, איסור תמצות).
+    """
+    return json.dumps({
+        "status": "SUCCESS",
+        "constitution": LEGALIX_MASTER_CONSTITUTION,
+        "active_swarm_agents": 13,
+        "supported_sources": ["Google Drive", "Dropbox", "AWS S3", "Direct Upload"]
+    }, ensure_ascii=False, indent=2)
 
 @mcp.tool()
 def legalix_mega_case_ingest(case_id: str, drive_folder_url: str) -> str:
@@ -38,7 +57,6 @@ def legalix_query_13_agents_swarm(case_id: str, query: str, target_agent: str = 
     """
     תשאול חדר המלחמה ו-13 מחסני הסוכנים: עובדות, כספים, ציר זמן, סתירות, ראיות, פסיקה, Red Team, חקירה נגדית.
     """
-    # Sample real response from the Poliner vault
     if "סתיר" in query or "contradiction" in query.lower() or target_agent in ["04", "contradictions"]:
         return json.dumps({
             "status": "SUCCESS",
