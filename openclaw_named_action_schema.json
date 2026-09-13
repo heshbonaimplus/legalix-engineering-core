@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenClaw Live Engineering & System Connector",
+    "version": "1.0.0",
+    "description": "מחבר ה-OpenClaw הרשמי והישיר של Legalix Engineering — מעניק ל-ChatGPT חיבור קבוע ומזוהה לכל יכולות OpenClaw בענן."
+  },
+  "servers": [
+    {
+      "url": "https://inclusion-refer-maintenance-associations.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "הפעלת סוכן OpenClaw הרשמי בענן לביצוע כל משימה הנדסית, כמויות ושרטוטים",
+        "operationId": "openClawEngineeringCoreTool",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "description": "הוראת המשתמש לסוכן OpenClaw"
+                  }
+                },
+                "required": ["command"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תשובת סוכן OpenClaw המאומתת",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "agent": { "type": "string" },
+                    "openclaw_connected": { "type": "boolean" },
+                    "openclaw_response": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
