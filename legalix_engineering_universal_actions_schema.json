@@ -1,0 +1,61 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix Engineering Universal Live API",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://inclusion-refer-maintenance-associations.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "חילוץ ורינדור גיליונות שרטוט (חשמל, שלד, אדריכלות, מיזוג) ובקרת תכן",
+        "operationId": "executeUniversalEngineeringTask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "building_id": {
+                    "type": "string",
+                    "description": "ההוראה המלאה (למשל: צלם תמונה 5 בחשמל, חלץ גיליון 3 באדריכלות, בקרת שלד)"
+                  }
+                },
+                "required": ["building_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאת הרינדור או הבקרה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "operation": { "type": "string" },
+                    "project_name": { "type": "string" },
+                    "drawing_file": { "type": "string" },
+                    "sheet_number": { "type": "string" },
+                    "sheet_title": { "type": "string" },
+                    "scale": { "type": "string" },
+                    "extracted_specifications": { "type": "object" },
+                    "rendered_image_url": { "type": "string" },
+                    "summary": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
