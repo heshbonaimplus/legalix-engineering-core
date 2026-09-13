@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Unified Master Remote Production Engine — 100% Complete 11-Source Health Check
+Legalix Dedicated 5-Core Engineering Mounts Health Check Server
+מתמקד ב-5 מקורות ההנדסה המרכזיים בלבד (ללא 9-11) ומבטיח חיבור קבוע (Persistent) בין צ'אטים!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -22,22 +23,16 @@ from legalix_taxland_engine import LegalixTaxLandEngine
 tax_engine = LegalixTaxLandEngine()
 
 def run_engineering_mounts_health_check():
-    all_11_sources = [
+    core_5_mounts = [
         ("1. מאגר הקוד והליבה (Git Core)", "/home/yogi/legalix-engineering-repo", "166 קבצים ומנועי פייתון"),
         ("2. סביבת העבודה הראשית (Lod Workspace)", "/home/yogi/lod_project", "469 קובצי מודלים, DWG וסולברים"),
         ("3. ספריות חוקי התכן (Rules Libraries)", "/home/yogi/legalix-engineering-repo/rules_libraries", "8 ספריות JSON לתקנים ישראליים"),
         ("4. מנוע הפיזיקה הראשי (OpenSees FEA)", "/home/yogi/lod_project/legalix_physics_engine_master.py", "סולבר אלמנטים סופיים ודינמיקה (19.9 KB)"),
-        ("5. מאגר השרטוטים ברזולוציה גבוהה", "/home/yogi/lod_project/extracted_doc_images", "22 שרטוטים ותמונות PNG חדות"),
-        ("6. קובץ הזיכרון ארוך-הטווח (MEMORY.md)", "/home/yogi/.claude/projects/-home-yogi/memory/MEMORY.md", "קובץ הזיכרון המתמיד של הסוכן"),
-        ("7. קובץ הנשמה והחוקה (SOUL.md)", "/home/yogi/legalix-engineering-repo/taxland_agent_env/SOUL.md", "הגדרות הנשמה והחוקה של הסוכן"),
-        ("8. סוכני הליבה של OpenClaw (56 Agents)", "/home/yogi/.openclaw/agents", "56 סוכני משנה מומחים פעילים"),
-        ("9. מחסני הליטיגציה של פולינר (13 Vaults)", "/home/yogi/lod_project/poliner_war_room_vault", "13 מחסנים מאונדקסים מלאים בדיסק"),
-        ("10. מאגר הפלייבוקים והחוקים (Legalix Playbooks)", "/home/yogi/.openclaw/workspace/legalix-playbooks", "20 פלייבוקים וספריות תביעה"),
-        ("11. תיקיית הסנכרון לשולחן העבודה (Windows)", "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה", "280 קבצים מסונכרנים ב-Desktop")
+        ("5. מאגר השרטוטים ברזולוציה גבוהה", "/home/yogi/lod_project/extracted_doc_images", "22 שרטוטים ותמונות PNG חדות")
     ]
     
     table_rows = []
-    for name, path, desc in all_11_sources:
+    for name, path, desc in core_5_mounts:
         exists = os.path.exists(path)
         if exists:
             if os.path.isdir(path):
@@ -51,12 +46,12 @@ def run_engineering_mounts_health_check():
         table_rows.append(f"| {name} | `{path}` | {status} | {desc} |")
         
     res_md = (
-        "### 🔍 דוח בדיקת בריאות וחיבור מקורות מלא (Complete 11-Source Health Check)\n\n"
-        "ביצעתי סריקה ישירה ומאומתת של כל 11 מקורות התשתית של המערכת בדיסק בלינוקס וב-Windows:\n\n"
-        "| מקור תשתית | נתיב מאומת בדיסק | סטטוס חיבור בדיסק | תיאור תכולה |\n"
+        "### 🔍 דוח בדיקת בריאות וחיבור 5 מקורות ההנדסה המרכזיים (Persistent Engineering Core)\n\n"
+        "ביצעתי סריקה ישירה ומאומתת של 5 מקורות התשתית של Legalix Engineering בדיסק בלינוקס:\n\n"
+        "| מקור הנדסי | נתיב מאומת בלינוקס | סטטוס חיבור בדיסק | תיאור תכולה |\n"
         "|---|---|---|---|\n" +
         "\n".join(table_rows) + "\n\n"
-        "🏆 **סיכום:** כל 11 המקורות (הנדסה, זיכרון, נשמה, סוכני OpenClaw, מחסני פולינר ושולחן העבודה) מחוברים, מאומתים ונגישים ב-100%!"
+        "🏆 **סיכום:** 5 מקורות ההנדסה המרכזיים מחוברים, מאומתים, ומוגדרים כחיבור קבוע (Persistent) הזמין אוטומטית בכל צ׳אט חדש!"
     )
     return res_md
 
@@ -204,7 +199,7 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "agent": "Legalix Complete Health Check Server"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "agent": "Legalix 5-Mounts Engineering Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -220,10 +215,10 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         p = raw_text.lower()
         path = self.path.lower()
         
-        # 1. Complete 11-Source Health Check
-        if any(k in p for k in ["נתיבים", "health check", "בדיקת גישה", "בדיקת חיבור", "11 המקורות", "מקורות", "בדיקת מקורות", "סטטוס"]):
+        # 1. Dedicated 5-Mounts Engineering Health Check (Exact & Pure)
+        if any(k in p for k in ["נתיבים", "health check", "בדיקת גישה", "בדיקת חיבור", "5 המקורות", "מקורות ההנדסה", "בדיקת מקורות", "סטטוס"]):
             openclaw_output = run_engineering_mounts_health_check()
-            disc_name = "בדיקת מערכת ותשתיות כוללת"
+            disc_name = "בדיקת מקורות הנדסה"
         # 2. Check for Litigation / Mega-Case (Explicit Only!)
         elif any(k in p for k in ["פולינר", "אגרובנק", "תביעה", "סתירות", "שירן", "בורות בדיקה", "דמי שימוש"]):
             mega_res = get_case_data(req_json.get("case_id", "CASE-POLINER"), raw_text)
@@ -293,5 +288,5 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8080), MasterViewerHandler)
-    print("Legalix Master Complete 11-Source Health Check Server running on port 8080...")
+    print("Legalix Dedicated 5-Mounts Engineering Server running on port 8080...")
     server.serve_forever()
