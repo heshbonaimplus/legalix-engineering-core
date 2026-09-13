@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Multi-Discipline BOQ & Master Viewer Server
+Legalix Zero-Cache Base64 Embedded Drawing Viewer & Master Server
+מטמיע את תמונת השרטוט ישירות ב-Base64 בתוך ה-HTML — אפס סיכוי ל-Cache או לתמונות כפולות!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -9,6 +10,7 @@ import json
 import re
 import time
 import glob
+import base64
 import os
 import sys
 
@@ -22,9 +24,12 @@ tax_engine = LegalixTaxLandEngine()
 
 def resolve_exact_image_file(discipline, sheet_num):
     prefix_map = {
-        'hvac': 'markup_hvac_', 'plumbing': 'markup_plumbing_',
-        'electrical': 'markup_el_', 'landscape': 'markup_ls_',
-        'marketing': 'markup_mkt_', 'architectural': 'markup_mkt_',
+        'hvac': 'markup_hvac_',
+        'plumbing': 'markup_plumbing_',
+        'electrical': 'markup_el_',
+        'landscape': 'markup_ls_',
+        'marketing': 'markup_mkt_',
+        'architectural': 'markup_mkt_',
         'structural': 'markup_st_'
     }
     pattern = prefix_map.get(discipline, 'markup_st_')
@@ -109,35 +114,31 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if "/images/" in self.path:
-            clean_path = self.path.split("/images/")[-1].split("?")[0].replace(".png", "").strip().lower()
+        # 1. Base64 Embedded HTML Viewer (Zero Cache, 100% Reliable!)
+        if "/view/" in self.path or "/images/" in self.path:
+            clean_path = self.path.split("/")[-1].split("?")[0].replace(".png", "").strip().lower()
             parts = clean_path.split("_")
-            disc = parts[0]
+            disc = parts[0] if parts else "structural"
             num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-            file_path = resolve_exact_image_file(disc, num)
             
-            if os.path.exists(file_path):
+            file_path = resolve_exact_image_file(disc, num)
+            title = extract_sheet_title(file_path, disc, num)
+            
+            # Read image and convert to Base64
+            with open(file_path, 'rb') as f:
+                img_b64 = base64.b64encode(f.read()).decode('utf-8')
+            img_data_uri = f"data:image/png;base64,{img_b64}"
+
+            # If requesting raw PNG directly
+            if "/images/" in self.path and not "view" in self.path:
+                with open(file_path, 'rb') as f:
+                    img_bytes = f.read()
                 self.send_response(200)
                 self.send_header('Content-Type', 'image/png')
                 self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                with open(file_path, 'rb') as f:
-                    self.wfile.write(f.read())
+                self.wfile.write(img_bytes)
                 return
-            else:
-                self.send_response(404)
-                self.end_headers()
-                return
-
-        if "/view/" in self.path:
-            clean_path = self.path.split("/view/")[-1].split("?")[0].strip().lower()
-            parts = clean_path.split("_")
-            disc = parts[0]
-            num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-            file_path = resolve_exact_image_file(disc, num)
-            title = extract_sheet_title(file_path, disc, num)
-            img_src = f"/images/{disc}_{num}.png?t={int(time.time()*1000)}"
 
             html = f"""<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -146,22 +147,22 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; text-align: center; }}
-        .header {{ background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #334155; }}
-        h1 {{ font-size: 1.3rem; margin: 0 0 8px 0; color: #38bdf8; }}
-        p {{ font-size: 0.95rem; margin: 0; color: #94a3b8; }}
-        .img-container {{ background: #000; border-radius: 12px; overflow: hidden; border: 2px solid #38bdf8; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; text-align: center; }}
+        .header {{ background: #1e293b; border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid #334155; }}
+        h1 {{ font-size: 1.2rem; margin: 0 0 6px 0; color: #38bdf8; }}
+        p {{ font-size: 0.9rem; margin: 0; color: #94a3b8; }}
+        .img-container {{ background: #000; border-radius: 12px; overflow: hidden; border: 2px solid #38bdf8; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 15px; }}
         img {{ width: 100%; height: auto; display: block; }}
-        .footer {{ margin-top: 20px; font-size: 0.85rem; color: #64748b; }}
+        .footer {{ font-size: 0.8rem; color: #64748b; }}
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📐 {title}</h1>
-        <p>פרויקט לוד ניר צבי — עמרם אברהם | מודל הנדסי מקורי</p>
+        <p>פרויקט לוד ניר צבי — עמרם אברהם | שרטוט ומודל מקורי</p>
     </div>
     <div class="img-container">
-        <img src="{img_src}" alt="{title}">
+        <img src="{img_data_uri}" alt="{title}">
     </div>
     <div class="footer">
         Legalix Engineering Co-Pilot • שרת סוכן אוטונומי חי
@@ -179,7 +180,7 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Multi-Discipline BOQ Server"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Zero-Cache Base64 Viewer Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -224,12 +225,11 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
             file_path = resolve_exact_image_file(disc, num)
             sheet_title = extract_sheet_title(file_path, disc, num)
             view_url = f"https://{host_header}/view/{disc}_{num}"
-            img_url = f"https://{host_header}/images/{disc}_{num}.png?t={int(time.time()*1000)}"
+            
             yogi_response_text = (
                 f"### 📐 {sheet_title} — פרויקט לוד ניר צבי (עמרם אברהם)\n\n"
                 f"פתחתי את תוכניות ה-{disc_name} של הפרויקט וחילצתי את הגיליון המדויק:\n\n"
-                f"🖼️ **[לחץ כאן לפתיחת צילום הגיליון במסך מלא]({view_url})**\n\n"
-                f"![{sheet_title}]({img_url})"
+                f"🖼️ **[לחץ כאן לפתיחת צילום הגיליון במסך מלא]({view_url})**"
             )
 
         res = {
@@ -249,5 +249,5 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8080), MasterViewerHandler)
-    print("Legalix Multi-Discipline BOQ & Viewer Server running on port 8080...")
+    print("Legalix Zero-Cache Base64 Viewer Server running on port 8080...")
     server.serve_forever()
