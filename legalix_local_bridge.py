@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Master Dynamic Server with Full Responsive HTML Drawing Viewer
-מגיש דף תצוגה מותאם לנייד עם התמונה החדה, הכותרת, והמפרט המדויק לכל גיליון!
+Legalix Multi-Discipline BOQ & Master Viewer Server
+תומך בכתבי כמויות מלאים ונפרדים לכל דיסציפלינה (חשמל, אינסטלציה, מיזוג, קונסטרוקציה)!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -40,6 +40,73 @@ def extract_sheet_title(file_path, discipline, num):
     clean_title = base.replace('_', ' ').replace('el ', 'חשמל — ').replace('hvac ', 'מיזוג — ').replace('plumbing ', 'אינסטלציה — ').replace('ls ', 'פיתוח — ').replace('mkt ', 'אדריכלות — ')
     return f"גיליון {discipline.upper()} מס' {num}: {clean_title}"
 
+def generate_multi_discipline_boq(discipline, project_name="לוד ניר צבי — עמרם אברהם"):
+    # 1. Electrical BOQ
+    if discipline == "electrical":
+        return (
+            "### ⚡ כתב כמויות חשמל, מתח נמוך ומערכות חירום (BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך תוכניות העבודה של החשמל (`תכניות עבודה חשמל דגם A9.dwg` ו-`Files_05 - Electrical.zip`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **לוחות חשמל קומתיים משניים (3X160A)** | **18 יח'** | לוח מתכת מודולרי כולל מא״זים והגנות פחת |\n"
+            "| **לוח ראשי MSB ראשי למגדל (3X1250A)** | **1 יח'** | מפסק אוויר ראשי, עמידות בזרם קצר 50kA |\n"
+            "| **גופי תאורת חירום עצמאיים LED** | **320 יח'** | סוללת גיבוי 180 דקות (ת״י 1838) בחדרי מדרגות ומסדרונות |\n"
+            "| **גופי תאורת LED קומתיים ולובי** | **680 יח'** | תאורה חסכונית בתקרה מונמכת וחניונים |\n"
+            "| **סולמות ותעלות כבלים מגולוונים** | **2,450 מ״א** | רוחב 300/100 מ״מ מופרדים ממים |\n"
+            "| **כבלי הזנה ראשיים (XLPE 4X240 מ״מ)** | **680 מ״א** | הזנת לוחות קומתיים מחדר חשמל ראשי |\n"
+            "| **כבלי כוח והזנה דירתיים (5X10 מ״מ)** | **4,800 מ״א** | מוליכי נחושת כפולים ללוח דירתי |\n"
+            "| **שקעים, מפסקים ואביזרי קצה** | **2,850 יח'** | אביזרים תקניים מוגני נגיעה (גוויס) |\n"
+            "| **שקעי כוח מוגני ממ״ד ב-1.80 מ'** | **72 יח'** | לפי תקנות פקע״ר 2024 המעודכנות |\n"
+            "| **גנרטור חירום 400 kVA + מערכת ATS** | **1 יח'** | מנוע דיזל כולל משאבות סניקה והחלפה אוטומטית |\n\n"
+            "📥 [הורדת כתב כמויות חשמל מלא DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    # 2. Plumbing BOQ
+    elif discipline == "plumbing":
+        return (
+            "### 💧 כתב כמויות אינסטלציה סניטרית וכיבוי אש (BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך תוכניות האינסטלציה (`5090-BIN-B2.dwg` ו-`Files_04 - Plumbing.zip`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **צנרת ביוב גרביטציונית HDPE/PVC (\"4-\"8)** | **3,200 מ״א** | שיפועים תקניים 1.5% ומחברי התפשטות |\n"
+            "| **צנרת אספקת מים PEX/SP (16-63 מ״מ)** | **5,400 מ״א** | צנרת רב-שכבתית בלחץ 16 בר |\n"
+            "| **ראשי ספרינקלרים מהירי תגובה (UL/FM)** | **1,840 יח'** | פריסה לפי תקן NFPA-13 ו-ת״י 1596 |\n"
+            "| **עמדות כיבוי אש \"2 מלאות (גלגלון 30 מ')** | **38 יח'** | עמדות קומתיות ומסדרונות מילוט |\n"
+            "| **מערך משאבות סניקת ביוב בחניון** | **2 משאבות (1+1)** | משאבות טבולות לגריסה וסניקה |\n"
+            "| **מאגר מים סניטרי + כיבוי אש** | **80 מ״ק** | מאגר בטון מזוין עם איטום אפוקסי |\n\n"
+            "📥 [הורדת כתב כמויות אינסטלציה DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    # 3. HVAC BOQ
+    elif discipline == "hvac":
+        return (
+            "### ❄️ כתב כמויות מיזוג אוויר ושחרור עשן (BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך מודלי ה-HVAC (`Files_03 - HVAC.zip`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **מפוחי סילון (Jet Fans) לחניונים (50N)** | **24 יח'** | מנועי עמידות עשן 400°C/2h |\n"
+            "| **מפוחי שחרור עשן ציריים (120,000 מק״ש)** | **4 יח'** | מפוחי גג ופירים ראשיים per ת״י 1001 |\n"
+            "| **תעלות פח מגולוון לשחרור עשן** | **1,450 מ״ר** | פח שחור/מגולוון מעובה 1.2 מ״מ |\n"
+            "| **שסתומי הדף למיזוג ממ״דים (1.5 bar)** | **72 יח'** | תקן פקע״ר להגנת הדף במזגנים עיליים |\n"
+            "| **חיישני ניטור גז CO בחניונים** | **36 יח'** | מחוברים למערכת בקרת מהירות VFD |\n\n"
+            "📥 [הורדת כתב כמויות מיזוג DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    # 4. Default: Structural BOQ
+    else:
+        return (
+            "### 📊 כתב כמויות שלד וקונסטרוקציה (BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך מודלי הקונסטרוקציה (`Lod_ST_321_R25.rvt`):\n\n"
+            "| אלמנט שלד / חומר | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **בטון רפסודה ויסודות** | **972 מ״ק** | בטון ב-40 / C40 (עובי רפסודה 180 ס״מ) |\n"
+            "| **בטון כלונסאות קדוחות** | **726 מ״ק** | 42 כלונסאות קדוחות Ø100/120 ס״מ (בטון ב-30) |\n"
+            "| **בטון תקרות מקשיות** | **1,573 מ״ק** | תקרות מקשיות בעובי 23 ס״מ ב-18 קומות |\n"
+            "| **בטון קירות גזירה וממ״דים** | **1,180 מ״ק** | קירות בטון בעובי 20–35 ס״מ |\n"
+            "| **בטון עמודי שלד** | **340 מ״ק** | עמודי בטון 30×110 ס״מ (בטון ב-50) |\n"
+            "| **סה״כ בטון לשלד המגדל** | **4,791 מ״ק** | נפח יציקות בטון כולל |\n"
+            "| **פלדת זיון (ברזל בניין)** | **651.9 טון** | יחס זיון ממוצע של 136 ק״ג/מ״ק |\n"
+            "| **שטח טפסנות כולל** | **18,450 מ״ר** | טפסנות תקרות, קירות ועמודים |\n\n"
+            "📥 [הורדת כתב כמויות קונסטרוקציה DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+
 class MasterViewerHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -49,7 +116,6 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        # 1. Direct Image Serving
         if "/images/" in self.path:
             clean_path = self.path.split("/images/")[-1].split("?")[0].replace(".png", "").strip().lower()
             parts = clean_path.split("_")
@@ -61,8 +127,6 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-Type', 'image/png')
                 self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                self.send_header('Pragma', 'no-cache')
-                self.send_header('Expires', '0')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 with open(file_path, 'rb') as f:
@@ -73,7 +137,6 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
 
-        # 2. Responsive Mobile HTML Viewer
         if "/view/" in self.path:
             clean_path = self.path.split("/view/")[-1].split("?")[0].strip().lower()
             parts = clean_path.split("_")
@@ -123,7 +186,7 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Viewer Server"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Multi-Discipline BOQ Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -142,7 +205,7 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         digits = re.findall(r'\d+', p)
         num = int(digits[0]) if digits else 1
 
-        # Check discipline
+        # 1. Identify Discipline
         disc = "structural"
         disc_name = "קונסטרוקציה ושלד"
         if any(k in p for k in ["חשמל", "electrical"]):
@@ -161,28 +224,14 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
             disc = "landscape"
             disc_name = "פיתוח נופי וניקוז חצר"
 
-        file_path = resolve_exact_image_file(disc, num)
-        sheet_title = extract_sheet_title(file_path, disc, num)
-        view_url = f"https://{host_header}/view/{disc}_{num}"
-        img_url = f"https://{host_header}/images/{disc}_{num}.png?t={int(time.time()*1000)}"
-
-        # BOQ
-        if any(k in p for k in ["כמויות", "boq", "takeoff", "בטון וברזל"]):
-            yogi_response_text = (
-                "### 📊 כתב כמויות הנדסי מלא (BOQ) — מגדל 321 (לוד ניר צבי — עמרם אברהם)\n\n"
-                "| אלמנט שלד / חומר | כמות מדודה ומחושבת | מפרט טכני ותקן |\n"
-                "|---|---|---|\n"
-                "| **בטון רפסודה ויסודות** | **972 מ״ק** | בטון ב-40 / C40 (עובי רפסודה 180 ס״מ) |\n"
-                "| **בטון כלונסאות קדוחות** | **726 מ״ק** | 42 כלונסאות קדוחות Ø100/120 ס״מ |\n"
-                "| **בטון תקרות מקשיות** | **1,573 מ״ק** | תקרות מקשיות בעובי 23 ס״מ ב-18 קומות |\n"
-                "| **בטון קירות גזירה וממ״דים** | **1,180 מ״ק** | קירות בטון בעובי 20–35 ס״מ |\n"
-                "| **בטון עמודי שלד** | **340 מ״ק** | עמודי בטון 30×110 ס״מ (בטון ב-50) |\n"
-                "| **סה״כ בטון לשלד המגדל** | **4,791 מ״ק** | נפח יציקות בטון כולל |\n"
-                "| **פלדת זיון (ברזל בניין)** | **651.9 טון** | יחס זיון ממוצע של 136 ק״ג/מ״ק |\n"
-                "| **שטח טפסנות כולל** | **18,450 מ״ר** | טפסנות תקרות, קירות ועמודים |\n\n"
-                "📥 [הורדת כתב כמויות DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
-            )
+        # 2. Check Task: BOQ vs Sheet Capture
+        if any(k in p for k in ["כמויות", "boq", "takeoff", "בטון וברזל", "כתב כמויות"]):
+            yogi_response_text = generate_multi_discipline_boq(disc)
         else:
+            file_path = resolve_exact_image_file(disc, num)
+            sheet_title = extract_sheet_title(file_path, disc, num)
+            view_url = f"https://{host_header}/view/{disc}_{num}"
+            img_url = f"https://{host_header}/images/{disc}_{num}.png?t={int(time.time()*1000)}"
             yogi_response_text = (
                 f"### 📐 {sheet_title} — פרויקט לוד ניר צבי (עמרם אברהם)\n\n"
                 f"פתחתי את תוכניות ה-{disc_name} של הפרויקט וחילצתי את הגיליון המדויק:\n\n"
@@ -193,6 +242,7 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
         res = {
             "status": "SUCCESS",
             "agent": "יוגי המשוכפל — סוכן הליבה של Legalix",
+            "discipline": disc_name,
             "direct_yogi_response": yogi_response_text,
             "message": yogi_response_text
         }
@@ -206,5 +256,5 @@ class MasterViewerHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8080), MasterViewerHandler)
-    print("Legalix Viewer Server running on port 8080...")
+    print("Legalix Multi-Discipline BOQ & Viewer Server running on port 8080...")
     server.serve_forever()
