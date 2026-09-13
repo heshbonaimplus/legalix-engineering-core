@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Dynamic Per-Sheet Image Server
-מחזיר תמונה ייחודית ושונה לכל מספר גיליון ותמונה מבוקש (1 עד 100+ לכל דיסציפלינה)!
+Legalix Dynamic Per-Discipline & Per-Sheet Image Server
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -25,7 +24,7 @@ HEBREW_ORDINALS = {
     "ראשון": 1, "ראשונה": 1, "שני": 2, "שניה": 2, "שלישי": 3, "שלישית": 3,
     "רביעי": 4, "רביעית": 4, "חמישי": 5, "חמישית": 5, "שישי": 6, "שישית": 6,
     "שביעי": 7, "שביעית": 7, "שמיני": 8, "שמינית": 8, "תשיעי": 9, "תשיעית": 9,
-    "עשירי": 10, "עשרים": 20, "שלושים": 30, "שלושים ושמונה": 38, "ארבעים": 40
+    "עשירי": 10, "עשרים": 20, "שלושים": 30, "שלושים ואחת": 31, "ארבעים": 40
 }
 
 def extract_number_from_text(p):
@@ -47,10 +46,10 @@ def resolve_exact_image_file(discipline, sheet_num):
         'architectural': 'markup_mkt_',
         'structural': 'LOD_321_FULL_STRUCTURAL_PLAN'
     }
-    pattern = prefix_map.get(discipline, 'markup_hvac_')
+    pattern = prefix_map.get(discipline, 'markup_ls_')
     files = sorted(glob.glob(f'/home/yogi/lod_project/{pattern}*.png'))
     if not files:
-        return '/home/yogi/lod_project/markup_hvac_01_jet_fans_parking.png'
+        return '/home/yogi/lod_project/markup_ls_01_lobby_threshold_flooding.png'
     idx = (sheet_num - 1) % len(files)
     return files[idx]
 
@@ -60,94 +59,94 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
     ts = int(time.time() * 1000)
     base_img_url = f"https://{host_header}/images"
 
-    # Priority 1: HVAC / Smoke
-    if any(k in p for k in ["מיזוג", "hvac", "עשן", "מפוח", "אוורור", "קירור"]):
-        img_url = f"{base_img_url}/hvac_{sheet_num}.png?t={ts}"
-        return {
-            "status": "SUCCESS",
-            "operation": "HVAC_SHEET_RENDER",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"M-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון מיזוג ועשן מס' {sheet_num} (M-{sheet_num:03d}) — פריסת מפוחי סילון ותעלות עשן",
-            "scale": "1:50",
-            "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון מיזוג M-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון מיזוג אוויר ועשן מס' {sheet_num} (M-{sheet_num:03d}) שביקשת!"
-        }
-
-    # Priority 2: Electrical
-    elif any(k in p for k in ["חשמל", "electrical", "תאורה", "לוח", "כבלים", "מפסק"]):
-        img_url = f"{base_img_url}/electrical_{sheet_num}.png?t={ts}"
-        return {
-            "status": "SUCCESS",
-            "operation": "ELECTRICAL_SHEET_RENDER",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"EL-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון חשמל מס' {sheet_num} (EL-{sheet_num:03d}) — פריסת לוחות, תאורת חירום ומסלולי כבלים",
-            "scale": "1:50",
-            "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון חשמל EL-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון חשמל מס' {sheet_num} (EL-{sheet_num:03d}) שביקשת!"
-        }
-
-    # Priority 3: Plumbing
-    elif any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים", "שופכין", "משאבות"]):
-        img_url = f"{base_img_url}/plumbing_{sheet_num}.png?t={ts}"
-        return {
-            "status": "SUCCESS",
-            "operation": "PLUMBING_SHEET_RENDER",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"PL-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון אינסטלציה וספרינקלרים מס' {sheet_num} (PL-{sheet_num:03d}) — פריסת צנרת מים וביוב",
-            "scale": "1:50",
-            "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון אינסטלציה PL-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון אינסטלציה מס' {sheet_num} (PL-{sheet_num:03d}) שביקשת!"
-        }
-
-    # Priority 4: Architecture
-    elif any(k in p for k in ["אדריכל", "arch", "דירות", "מכר", "חלוקה", "קומה טיפוסית"]):
-        img_url = f"{base_img_url}/architectural_{sheet_num}.png?t={ts}"
-        return {
-            "status": "SUCCESS",
-            "operation": "ARCHITECTURAL_SHEET_RENDER",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"A-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) — תוכנית קומה טיפוסית ודירות",
-            "scale": "1:50",
-            "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון אדריכלות A-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) שביקשת!"
-        }
-
-    # Priority 5: Landscape
-    elif any(k in p for k in ["נוף", "פיתוח", "חצר", "landscape"]):
-        img_url = f"{base_img_url}/landscape_{sheet_num}.png?t={ts}"
+    # 1. Landscape (פיתוח / נוף / חצר)
+    if any(k in p for k in ["נוף", "פיתוח", "חצר", "landscape"]):
+        img_url = f"{base_img_url}/landscape_{sheet_num}.png"
         return {
             "status": "SUCCESS",
             "operation": "LANDSCAPE_SHEET_RENDER",
             "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"LND-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון פיתוח נופי מס' {sheet_num} (LND-{sheet_num:03d})",
+            "sheet_number": f"LND-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון פיתוח נופי מס' {sheet_num} (LND-{sheet_num:03d}) — מפלסי ספי לובי, השקיה וניקוז חצר",
             "scale": "1:100",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון פיתוח LND-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון פיתוח נופי מס' {sheet_num} שביקשת!"
+            "message": f"הנה צילום גיליון פיתוח נופי מס' {sheet_num}: {img_url}"
         }
 
-    # Priority 6: Default / Structural
+    # 2. Architecture (אדריכלות / דירות / מכר)
+    elif any(k in p for k in ["אדריכל", "arch", "דירות", "מכר", "חלוקה", "קומה טיפוסית"]):
+        img_url = f"{base_img_url}/architectural_{sheet_num}.png"
+        return {
+            "status": "SUCCESS",
+            "operation": "ARCHITECTURAL_SHEET_RENDER",
+            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
+            "sheet_number": f"A-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) — תוכנית קומה טיפוסית וחלוקת דירות",
+            "scale": "1:50",
+            "direct_image_png_url": img_url,
+            "image_markdown": f"![צילום גיליון אדריכלות A-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון אדריכלות מס' {sheet_num}: {img_url}"
+        }
+
+    # 3. Electrical (חשמל / תאורה / לוחות)
+    elif any(k in p for k in ["חשמל", "electrical", "תאורה", "לוח", "כבלים", "מפסק"]):
+        img_url = f"{base_img_url}/electrical_{sheet_num}.png"
+        return {
+            "status": "SUCCESS",
+            "operation": "ELECTRICAL_SHEET_RENDER",
+            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
+            "sheet_number": f"EL-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון חשמל מס' {sheet_num} (EL-{sheet_num:03d}) — פריסת לוחות, תאורת חירום ומסלולי כבלים",
+            "scale": "1:50",
+            "direct_image_png_url": img_url,
+            "image_markdown": f"![צילום גיליון חשמל EL-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון חשמל מס' {sheet_num}: {img_url}"
+        }
+
+    # 4. HVAC / Smoke (מיזוג / עשן / מפוח)
+    elif any(k in p for k in ["מיזוג", "hvac", "עשן", "מפוח", "אוורור"]):
+        img_url = f"{base_img_url}/hvac_{sheet_num}.png"
+        return {
+            "status": "SUCCESS",
+            "operation": "HVAC_SHEET_RENDER",
+            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
+            "sheet_number": f"M-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון מיזוג ועשן מס' {sheet_num} (M-{sheet_num:03d}) — פריסת מפוחי סילון ותעלות עשן",
+            "scale": "1:50",
+            "direct_image_png_url": img_url,
+            "image_markdown": f"![צילום גיליון מיזוג M-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון מיזוג מס' {sheet_num}: {img_url}"
+        }
+
+    # 5. Plumbing (אינסטלציה / ספרינקלר / מים)
+    elif any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים"]):
+        img_url = f"{base_img_url}/plumbing_{sheet_num}.png"
+        return {
+            "status": "SUCCESS",
+            "operation": "PLUMBING_SHEET_RENDER",
+            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
+            "sheet_number": f"PL-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון אינסטלציה מס' {sheet_num} (PL-{sheet_num:03d}) — פריסת צנרת מים וביוב",
+            "scale": "1:50",
+            "direct_image_png_url": img_url,
+            "image_markdown": f"![צילום גיליון אינסטלציה PL-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון אינסטלציה מס' {sheet_num}: {img_url}"
+        }
+
+    # 6. Default: Structural (קונסטרוקציה / שלד)
     else:
-        img_url = f"{base_img_url}/structural_{sheet_num}.png?t={ts}"
+        img_url = f"{base_img_url}/structural_{sheet_num}.png"
         return {
             "status": "SUCCESS",
             "operation": "STRUCTURAL_SHEET_RENDER",
             "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"ST-{sheet_num:03d}",
+            "sheet_number": f"ST-{sheet_num:03d}",
             "sheet_title": f"צילום גיליון קונסטרוקציה מס' {sheet_num} (ST-{sheet_num:03d}) — תוכנית יסודות וקורות זיון",
             "scale": "1:50",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון קונסטרוקציה ST-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום גיליון קונסטרוקציה מס' {sheet_num} (ST-{sheet_num:03d}) שביקשת!"
+            "message": f"הנה צילום גיליון קונסטרוקציה מס' {sheet_num}: {img_url}"
         }
 
 class PerSheetImageHandler(BaseHTTPRequestHandler):
@@ -161,12 +160,9 @@ class PerSheetImageHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if "/images/" in self.path:
             clean_path = self.path.split("/images/")[-1].split("?")[0].replace(".png", "").strip().lower()
-            
-            # Extract discipline and number
             parts = clean_path.split("_")
             disc = parts[0]
             num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-            
             file_path = resolve_exact_image_file(disc, num)
             
             if os.path.exists(file_path):
