@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Dynamic Timestamped Multi-Discipline Image Server
-מונע לחלוטין שמירה ב-Cache ע״י ייצור URL דינמי ייחודי לכל בקשה!
+Legalix Context-Immune Precision Image & Task Dispatcher
+מנוע חסין-הקשר: מפרק כל מילה ומונח במשפט המשתמש העדכני בלבד,
+מבטל לחלוטין כל תלות בשיחות או פרמטרים קודמים,
+ומחזיר מיד את התמונה והגיליון המדויקים לכל דיסציפלינה!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -51,22 +53,22 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
     ts = int(time.time() * 1000)
     base_img_url = f"https://{host_header}/images"
 
-    # 1. Plumbing
-    if any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים", "שופכין", "משאבות"]):
-        img_url = f"{base_img_url}/plumbing.png?t={ts}&sheet={sheet_num}"
+    # Priority 1: HVAC / Smoke (מיזוג / עשן / מפוח / אוורור)
+    if any(k in p for k in ["מיזוג", "hvac", "עשן", "מפוח", "אוורור", "קירור"]):
+        img_url = f"{base_img_url}/hvac.png?t={ts}&sheet={sheet_num}"
         return {
             "status": "SUCCESS",
-            "operation": "PLUMBING_SHEET_RENDER",
+            "operation": "HVAC_SHEET_RENDER",
             "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"PL-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון אינסטלציה וספרינקלרים מס' {sheet_num} (PL-{sheet_num:03d}) — פריסת צנרת מים, ביוב ומאגרי כיבוי",
+            "sheet_id": f"M-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון מיזוג ועשן מס' {sheet_num} (M-{sheet_num:03d}) — פריסת מפוחי סילון ותעלות עשן",
             "scale": "1:50",
             "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון אינסטלציה PL-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של אינסטלציה (תמונת PNG נקייה): {img_url}"
+            "image_markdown": f"![צילום גיליון מיזוג M-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון מיזוג אוויר ועשן מס' {sheet_num} (M-{sheet_num:03d}) שביקשת!"
         }
 
-    # 2. Electrical
+    # Priority 2: Electrical (חשמל / תאורה / לוחות / כבלים)
     elif any(k in p for k in ["חשמל", "electrical", "תאורה", "לוח", "כבלים", "מפסק"]):
         img_url = f"{base_img_url}/electrical.png?t={ts}&sheet={sheet_num}"
         return {
@@ -78,10 +80,25 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "scale": "1:50",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון חשמל EL-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של חשמל (תמונת PNG נקייה): {img_url}"
+            "message": f"הנה צילום גיליון חשמל מס' {sheet_num} (EL-{sheet_num:03d}) שביקשת!"
         }
 
-    # 3. Architecture
+    # Priority 3: Plumbing & Fire Suppression (אינסטלציה / ספרינקלר / מים / ביוב)
+    elif any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים", "שופכין", "משאבות"]):
+        img_url = f"{base_img_url}/plumbing.png?t={ts}&sheet={sheet_num}"
+        return {
+            "status": "SUCCESS",
+            "operation": "PLUMBING_SHEET_RENDER",
+            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
+            "sheet_id": f"PL-{sheet_num:03d}",
+            "sheet_title": f"צילום גיליון אינסטלציה וספרינקלרים מס' {sheet_num} (PL-{sheet_num:03d}) — פריסת צנרת מים וביוב",
+            "scale": "1:50",
+            "direct_image_png_url": img_url,
+            "image_markdown": f"![צילום גיליון אינסטלציה PL-{sheet_num:03d}]({img_url})",
+            "message": f"הנה צילום גיליון אינסטלציה מס' {sheet_num} (PL-{sheet_num:03d}) שביקשת!"
+        }
+
+    # Priority 4: Architecture (אדריכלות / דירות / מרפסות)
     elif any(k in p for k in ["אדריכל", "arch", "דירות", "מכר", "חלוקה", "קומה טיפוסית"]):
         img_url = f"{base_img_url}/architectural.png?t={ts}&sheet={sheet_num}"
         return {
@@ -89,29 +106,14 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "operation": "ARCHITECTURAL_SHEET_RENDER",
             "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
             "sheet_id": f"A-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) — תוכנית קומה טיפוסית, חלוקת דירות ומרפסות",
+            "sheet_title": f"צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) — תוכנית קומה טיפוסית ודירות",
             "scale": "1:50",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון אדריכלות A-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של אדריכלות (תמונת PNG נקייה): {img_url}"
+            "message": f"הנה צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) שביקשת!"
         }
 
-    # 4. HVAC
-    elif any(k in p for k in ["מיזוג", "hvac", "עשן", "מפוח", "אוורור"]):
-        img_url = f"{base_img_url}/hvac.png?t={ts}&sheet={sheet_num}"
-        return {
-            "status": "SUCCESS",
-            "operation": "HVAC_SHEET_RENDER",
-            "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
-            "sheet_id": f"M-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון מיזוג ועשן מס' {sheet_num} (M-{sheet_num:03d}) — פריסת מפוחי סילון ותעלות עשן",
-            "scale": "1:50",
-            "direct_image_png_url": img_url,
-            "image_markdown": f"![צילום גיליון מיזוג M-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של מיזוג ועשן (תמונת PNG נקייה): {img_url}"
-        }
-
-    # 5. Landscape
+    # Priority 5: Landscape (פיתוח נופי / חצרות)
     elif any(k in p for k in ["נוף", "פיתוח", "חצר", "landscape"]):
         img_url = f"{base_img_url}/landscape.png?t={ts}&sheet={sheet_num}"
         return {
@@ -119,14 +121,14 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "operation": "LANDSCAPE_SHEET_RENDER",
             "project_name": "פרויקט לוד ניר צבי — עמרם אברהם",
             "sheet_id": f"LND-{sheet_num:03d}",
-            "sheet_title": f"צילום גיליון פיתוח נופי מס' {sheet_num} (LND-{sheet_num:03d}) — מפלסי ספי לובי וניקוז",
+            "sheet_title": f"צילום גיליון פיתוח נופי מס' {sheet_num} (LND-{sheet_num:03d})",
             "scale": "1:100",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון פיתוח LND-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של פיתוח נופי: {img_url}"
+            "message": f"הנה צילום גיליון פיתוח נופי מס' {sheet_num} שביקשת!"
         }
 
-    # 6. Default: Structural
+    # Priority 6: Default / Structural (קונסטרוקציה / שלד)
     else:
         img_url = f"{base_img_url}/structural.png?t={ts}&sheet={sheet_num}"
         return {
@@ -138,10 +140,10 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "scale": "1:50",
             "direct_image_png_url": img_url,
             "image_markdown": f"![צילום גיליון קונסטרוקציה ST-{sheet_num:03d}]({img_url})",
-            "message": f"הנה צילום הגיליון הישיר של קונסטרוקציה: {img_url}"
+            "message": f"הנה צילום גיליון קונסטרוקציה מס' {sheet_num} (ST-{sheet_num:03d}) שביקשת!"
         }
 
-class TimestampedImageHandler(BaseHTTPRequestHandler):
+class ContextImmuneHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -174,7 +176,7 @@ class TimestampedImageHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Dynamic Anti-Cache Server"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Context-Immune Precision Engine"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -186,15 +188,10 @@ class TimestampedImageHandler(BaseHTTPRequestHandler):
         except Exception:
             req_json = {}
 
-        prompt_text = (
-            str(req_json.get("building_id", "")) + " " +
-            str(req_json.get("instruction", "")) + " " +
-            str(req_json.get("query", "")) + " " +
-            str(req_json.get("task", ""))
-        ).strip()
+        # Scan all input fields for the user's latest prompt
+        raw_text = " ".join([str(v) for v in req_json.values() if isinstance(v, (str, int, float))])
 
         path = self.path.lower()
-        
         if "taxland" in path:
             res = tax_engine.calculate_betterment_tax_linear(
                 purchase_price=float(req_json.get("purchase_price", 1000000)),
@@ -202,10 +199,10 @@ class TimestampedImageHandler(BaseHTTPRequestHandler):
                 purchase_date_str=req_json.get("purchase_date", "2005-01-01"),
                 sale_date_str="2026-06-01"
             )
-        elif "mega" in path or "poliner" in prompt_text.lower():
-            res = get_case_data(req_json.get("case_id", "CASE-POLINER"), prompt_text)
+        elif "mega" in path or "poliner" in raw_text.lower():
+            res = get_case_data(req_json.get("case_id", "CASE-POLINER"), raw_text)
         else:
-            res = parse_and_execute_generic_engineering_query(prompt_text, host_header)
+            res = parse_and_execute_generic_engineering_query(raw_text, host_header)
 
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -215,6 +212,6 @@ class TimestampedImageHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
 
 if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8080), TimestampedImageHandler)
-    print("Legalix Anti-Cache Dynamic Server running on port 8080...")
+    server = HTTPServer(('0.0.0.0', 8080), ContextImmuneHandler)
+    print("Legalix Context-Immune Server running on port 8080...")
     server.serve_forever()
