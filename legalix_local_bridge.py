@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Autonomous Master Production OpenClaw Server
-כולל מנוע החזרת תמונות ישירות (PNG), קישורים חיים, מגה-קייס, טקסלנד והנדסה!
+Legalix Unified Master Remote Production Engine — 100% Guaranteed Image Link Return
 """
 
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+import re
+import time
+import glob
 import os
 import sys
-import json
-import time
-import re
-import glob
-from http.server import HTTPServer, BaseHTTPRequestHandler
 
 sys.path.append('/opt/legalix')
 sys.path.append('/home/yogi/lod_project')
@@ -44,7 +43,7 @@ def extract_number_from_text(p):
     for word, val in HEBREW_ORDINALS.items():
         if word in p:
             return val
-    return 1
+    return 5
 
 def resolve_exact_image_file(discipline, sheet_num):
     prefix_map = {
@@ -83,8 +82,6 @@ class MasterProductionHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-Type', 'image/png')
                 self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                self.send_header('Pragma', 'no-cache')
-                self.send_header('Expires', '0')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 with open(file_path, 'rb') as f:
@@ -99,7 +96,7 @@ class MasterProductionHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Master Production Server"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Guaranteed Image Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -129,9 +126,8 @@ class MasterProductionHandler(BaseHTTPRequestHandler):
         # 2. Mega-Case
         elif "mega" in path or any(k in p for k in ["פולינר", "אגרובנק", "תביעה", "סתירות", "שירן"]):
             res = get_case_data(req_json.get("case_id", "CASE-POLINER"), raw_text)
-        # 3. Engineering (Universal Drawing & Sheet Extraction)
+        # 3. Engineering (Guaranteed Image Link)
         else:
-            # Check discipline
             if any(k in p for k in ["חשמל", "electrical"]):
                 disc = "electrical"
                 sheet_id = f"EL-{sheet_num:03d}"
@@ -169,7 +165,7 @@ class MasterProductionHandler(BaseHTTPRequestHandler):
                 "direct_image_png_url": img_url,
                 "image_markdown": f"![צילום {title}]({img_url})",
                 "summary": f"סוכן ההנדסה חילץ ורינדר את {title} בהצלחה מלאה.",
-                "message": f"הנה צילום הגיליון הישיר: {img_url}"
+                "message": f"הנה הקישור הישיר לתמונה: {img_url}"
             }
 
         self.send_response(200)
@@ -181,5 +177,5 @@ class MasterProductionHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8080), MasterProductionHandler)
-    print("Legalix Master Production Server running on port 8080...")
+    print("Legalix Guaranteed Image Server running on port 8080...")
     server.serve_forever()
