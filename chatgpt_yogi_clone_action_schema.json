@@ -1,0 +1,60 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix Autonomous Master Engine API",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://inclusion-refer-maintenance-associations.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "הפעלת סוכן הליבה האוטונומי של Legalix לכל משימה הנדסית, שרטוט, צילום גיליון, חישוב כמויות ובקרה",
+        "operationId": "runLegalixAutonomousMasterEngine",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "building_id": {
+                    "type": "string",
+                    "description": "הוראת המשתמש המלאה והמדויקת (למשל: צלם גיליון 12 בחשמל, חלץ תמונה 6 בקונסטרוקציה, חשב כמויות בטון)"
+                  }
+                },
+                "required": ["building_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאת הביצוע המלאה של סוכן הליבה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "operation": { "type": "string" },
+                    "project_name": { "type": "string" },
+                    "sheet_id": { "type": "string" },
+                    "sheet_title": { "type": "string" },
+                    "scale": { "type": "string" },
+                    "direct_image_png_url": { "type": "string" },
+                    "image_markdown": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
