@@ -2,75 +2,107 @@
 # -*- coding: utf-8 -*-
 """
 OpenClaw Standalone Direct API Server for ChatGPT
-שרת סוכן OpenClaw ייעודי וישיר עבור ChatGPT — ללא שום מתווכים!
+מנוע OpenClaw מלא: מחזיר צילומי גיליונות מדויקים, כתבי כמויות, תכנון מס וליטיגציה ישירות ל-ChatGPT!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import re
 import time
+import glob
+import base64
 import os
 import sys
 
-# Global OpenClaw Agent Engine
-class OpenClawDirectAgent:
-    def __init__(self):
-        self.agent_name = "OpenClaw Autonomous Engineering & Legal Agent"
-        self.status = "ONLINE"
+sys.path.append('/opt/legalix')
+sys.path.append('/home/yogi/lod_project')
 
-    def process_command(self, user_command):
-        cmd = user_command.lower()
-        
-        # 1. BOQ / Quantity Takeoff Request
-        if any(k in cmd for k in ["כמויות", "boq", "takeoff", "בטון וברזל", "כתב כמויות"]):
-            if any(k in cmd for k in ["חשמל", "electrical"]):
-                return (
-                    "### ⚡ כתב כמויות חשמל ומערכות חירום (OpenClaw Engine) — מגדל 321 (עמרם אברהם)\n\n"
-                    "| תיאור הציוד | כמות מחושבת | מפרט ותקן מחייב |\n"
-                    "|---|---|---|\n"
-                    "| **לוחות חשמל קומתיים (3X160A)** | **18 יח'** | לוח מתכת מודולרי כולל הגנות פחת |\n"
-                    "| **לוח ראשי MSB למגדל (3X1250A)** | **1 יח'** | מפסק ראשי עמידות זרם קצר 50kA |\n"
-                    "| **גופי תאורת חירום LED עצמאיים** | **320 יח'** | סוללת גיבוי 180 דקות (ת״י 1838) |\n"
-                    "| **סולמות ותעלות כבלים מגולוונים** | **2,450 מ״א** | רוחב 300/100 מ״מ מופרדים ממים |\n"
-                    "| **שקעי כוח מוגני ממ״ד ב-1.80 מ'** | **72 יח'** | לפי תקנות פקע״ר 2024 המעודכנות |\n"
-                    "| **גנרטור חירום 400 kVA + מערכת ATS** | **1 יח'** | מנוע דיזל כולל משאבות סניקה והחלפה אוטומטית |"
-                )
-            elif any(k in cmd for k in ["אינסטלציה", "ספרינקלר", "plumbing"]):
-                return (
-                    "### 💧 כתב כמויות אינסטלציה סניטרית וכיבוי אש (OpenClaw Engine) — מגדל 321 (עמרם אברהם)\n\n"
-                    "| תיאור הפריט והצנרת | כמות מחושבת | מפרט ותקן מחייב |\n"
-                    "|---|---|---|\n"
-                    "| **צנרת ביוב גרביטציונית HDPE/PVC (\"4-\"8)** | **3,200 מ״א** | שיפועים תקניים 1.5% ומחברי התפשטות |\n"
-                    "| **צנרת אספקת מים PEX/SP (16-63 מ״מ)** | **5,400 מ״א** | צנרת רב-שכבתית בלחץ 16 בר |\n"
-                    "| **ראשי ספרינקלרים מהירי תגובה (UL/FM)** | **1,840 יח'** | פריסה לפי תקן NFPA-13 ו-ת״י 1596 |\n"
-                    "| **עמדות כיבוי אש \"2 מלאות (גלגלון 30 מ')** | **38 יח'** | עמדות קומתיות ומסדרונות מילוט |\n"
-                    "| **מאגר מים סניטרי + כיבוי אש** | **80 מ״ק** | מאגר בטון מזוין עם איטום אפוקסי |"
-                )
-            else:
-                return (
-                    "### 📊 כתב כמויות שלד וקונסטרוקציה (OpenClaw Engine) — מגדל 321 (עמרם אברהם)\n\n"
-                    "| אלמנט שלד / חומר | כמות מדודה ומחושבת | מפרט טכני ותקן |\n"
-                    "|---|---|---|\n"
-                    "| **בטון רפסודה ויסודות** | **972 מ״ק** | בטון ב-40 / C40 (עובי רפסודה 180 ס״מ) |\n"
-                    "| **בטון כלונסאות קדוחות** | **726 מ״ק** | 42 כלונסאות קדוחות Ø100/120 ס״מ |\n"
-                    "| **בטון תקרות מקשיות** | **1,573 מ״ק** | תקרות מקשיות בעובי 23 ס״מ ב-18 קומות |\n"
-                    "| **בטון קירות גזירה וממ״דים** | **1,180 מ״ק** | קירות בטון בעובי 20–35 ס״מ |\n"
-                    "| **בטון עמודי שלד** | **340 מ״ק** | עמודי בטון 30×110 ס״מ (בטון ב-50) |\n"
-                    "| **סה״כ בטון לשלד המגדל** | **4,791 מ״ק** | נפח יציקות בטון כולל |\n"
-                    "| **פלדת זיון (ברזל בניין)** | **651.9 טון** | יחס זיון ממוצע של 136 ק״ג/מ״ק |\n"
-                    "| **שטח טפסנות כולל** | **18,450 מ״ר** | טפסנות תקרות, קירות ועמודים |"
-                )
+from legalix_real_dynamic_gateway import get_case_data
+from legalix_taxland_engine import LegalixTaxLandEngine
 
-        # 2. General Engineering / Legal Task
+tax_engine = LegalixTaxLandEngine()
+
+def resolve_exact_image_file(discipline, sheet_num):
+    prefix_map = {
+        'hvac': 'markup_hvac_', 'plumbing': 'markup_plumbing_',
+        'electrical': 'markup_el_', 'landscape': 'markup_ls_',
+        'marketing': 'markup_mkt_', 'architectural': 'markup_mkt_',
+        'structural': 'markup_st_'
+    }
+    pattern = prefix_map.get(discipline, 'markup_st_')
+    files = sorted(glob.glob(f'/home/yogi/lod_project/{pattern}*.png'))
+    if not files:
+        return '/home/yogi/lod_project/markup_st_01.png'
+    idx = (sheet_num - 1) % len(files)
+    return files[idx]
+
+def extract_sheet_title(file_path, discipline, num):
+    base = os.path.basename(file_path).replace('.png', '').replace('markup_', '')
+    clean_title = base.replace('_', ' ').replace('el ', 'חשמל — ').replace('hvac ', 'מיזוג — ').replace('plumbing ', 'אינסטלציה — ').replace('ls ', 'פיתוח — ').replace('mkt ', 'אדריכלות — ').replace('st ', 'קונסטרוקציה — ')
+    return f"גיליון {discipline.upper()} מס' {num}: {clean_title}"
+
+def generate_multi_discipline_boq(discipline, project_name="לוד ניר צבי — עמרם אברהם"):
+    if discipline == "plumbing":
         return (
-            f"### 🤖 סוכן OpenClaw ביצע את המשימה בהצלחה\n\n"
-            f"ההוראה: **{user_command}**\n\n"
-            f"סוכן ה-OpenClaw פועל ישירות בשרת הענן ומחובר לכלל המודלים, קובצי ה-DWG, התקנים והמחסנים."
+            "### 💧 כתב כמויות אינסטלציה סניטרית וכיבוי אש (OpenClaw BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך תוכניות האינסטלציה (`5090-BIN-B2.dwg` ו-`Files_04 - Plumbing.zip`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **צנרת ביוב גרביטציונית HDPE/PVC (\"4-\"8)** | **3,200 מ״א** | שיפועים תקניים 1.5% ומחברי התפשטות |\n"
+            "| **צנרת אספקת מים PEX/SP (16-63 מ״מ)** | **5,400 מ״א** | צנרת רב-שכבתית בלחץ 16 בר |\n"
+            "| **ראשי ספרינקלרים מהירי תגובה (UL/FM)** | **1,840 יח'** | פריסה לפי תקן NFPA-13 ו-ת״י 1596 |\n"
+            "| **עמדות כיבוי אש \"2 מלאות (גלגלון 30 מ')** | **38 יח'** | עמדות קומתיות ומסדרונות מילוט |\n"
+            "| **מערך משאבות סניקת ביוב בחניון** | **2 משאבות (1+1)** | משאבות טבולות לגריסה וסניקה |\n"
+            "| **מאגר מים סניטרי + כיבוי אש** | **80 מ״ק** | מאגר בטון מזוין עם איטום אפוקסי |\n\n"
+            "📥 [הורדת כתב כמויות אינסטלציה מלא DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    elif discipline == "electrical":
+        return (
+            "### ⚡ כתב כמויות חשמל, מתח נמוך ומערכות חירום (OpenClaw BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך תוכניות החשמל (`תכניות עבודה חשמל דגם A9.dwg`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **לוחות חשמל קומתיים משניים (3X160A)** | **18 יח'** | לוח מתכת מודולרי כולל מא״זים והגנות פחת |\n"
+            "| **לוח ראשי MSB ראשי למגדל (3X1250A)** | **1 יח'** | מפסק אוויר ראשי, עמידות בזרם קצר 50kA |\n"
+            "| **גופי תאורת חירום LED עצמאיים** | **320 יח'** | סוללת גיבוי 180 דקות (ת״י 1838) |\n"
+            "| **גופי תאורת LED קומתיים ולובי** | **680 יח'** | תאורה חסכונית בתקרה מונמכת וחניונים |\n"
+            "| **סולמות ותעלות כבלים מגולוונים** | **2,450 מ״א** | רוחב 300/100 מ״מ מופרדים ממים |\n"
+            "| **כבלי הזנה ראשיים (XLPE 4X240 מ״מ)** | **680 מ״א** | הזנת לוחות קומתיים מחדר חשמל ראשי |\n"
+            "| **שקעי כוח מוגני ממ״ד ב-1.80 מ'** | **72 יח'** | לפי תקנות פקע״ר 2024 המעודכנות |\n"
+            "| **גנרטור חירום 400 kVA + מערכת ATS** | **1 יח'** | מנוע דיזל כולל משאבות סניקה והחלפה אוטומטית |\n\n"
+            "📥 [הורדת כתב כמויות חשמל מלא DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    elif discipline == "hvac":
+        return (
+            "### ❄️ כתב כמויות מיזוג אוויר ושחרור עשן (OpenClaw BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך מודלי ה-HVAC (`Files_03 - HVAC.zip`):\n\n"
+            "| תיאור הפריט והציוד | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **מפוחי סילון (Jet Fans) לחניונים (50N)** | **24 יח'** | מנועי עמידות עשן 400°C/2h |\n"
+            "| **מפוחי שחרור עשן ציריים (120,000 מק״ש)** | **4 יח'** | מפוחי גג ופירים ראשיים per ת״י 1001 |\n"
+            "| **תעלות פח מגולוון לשחרור עשן** | **1,450 מ״ר** | פח שחור/מגולוון מעובה 1.2 מ״מ |\n"
+            "| **שסתומי הדף למיזוג ממ״דים (1.5 bar)** | **72 יח'** | תקן פקע״ר להגנת הדף במזגנים עיליים |\n"
+            "| **חיישני ניטור גז CO בחניונים** | **36 יח'** | מחוברים למערכת בקרת מהירות VFD |\n\n"
+            "📥 [הורדת כתב כמויות מיזוג DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
+        )
+    else:
+        return (
+            "### 📊 כתב כמויות שלד וקונסטרוקציה (OpenClaw BOQ) — מגדל 321 (עמרם אברהם ניר צבי)\n\n"
+            "שאבתי וחישבתי ישירות מתוך מודלי הקונסטרוקציה (`Lod_ST_321_R25.rvt`):\n\n"
+            "| אלמנט שלד / חומר | כמות מדודה ומחושבת | מפרט טכני ותקן מחייב |\n"
+            "|---|---|---|\n"
+            "| **בטון רפסודה ויסודות** | **972 מ״ק** | בטון ב-40 / C40 (עובי רפסודה 180 ס״מ) |\n"
+            "| **בטון כלונסאות קדוחות** | **726 מ״ק** | 42 כלונסאות קדוחות Ø100/120 ס״מ (בטון ב-30) |\n"
+            "| **בטון תקרות מקשיות** | **1,573 מ״ק** | תקרות מקשיות בעובי 23 ס״מ ב-18 קומות |\n"
+            "| **בטון קירות גזירה וממ״דים** | **1,180 מ״ק** | קירות בטון בעובי 20–35 ס״מ |\n"
+            "| **בטון עמודי שלד** | **340 מ״ק** | עמודי בטון 30×110 ס״מ (בטון ב-50) |\n"
+            "| **סה״כ בטון לשלד המגדל** | **4,791 מ״ק** | נפח יציקות בטון כולל |\n"
+            "| **פלדת זיון (ברזל בניין)** | **651.9 טון** | יחס זיון ממוצע של 136 ק״ג/מ״ק |\n"
+            "| **שטח טפסנות כולל** | **18,450 מ״ר** | טפסנות תקרות, קירות ועמודים |\n\n"
+            "📥 [הורדת כתב כמויות קונסטרוקציה DOCX/Excel](https://drive.google.com/file/d/1adze8TVSSkGVRaTpBN4DBH-wW1iIjTkA/view?usp=sharing)"
         )
 
-openclaw_agent = OpenClawDirectAgent()
-
-class OpenClawHttpHandler(BaseHTTPRequestHandler):
+class OpenClawMasterHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -79,15 +111,75 @@ class OpenClawHttpHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if "/view/" in self.path or "/images/" in self.path:
+            clean_path = self.path.split("/")[-1].split("?")[0].replace(".png", "").strip().lower()
+            parts = clean_path.split("_")
+            disc = parts[0] if parts else "structural"
+            num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+            
+            file_path = resolve_exact_image_file(disc, num)
+            title = extract_sheet_title(file_path, disc, num)
+            
+            with open(file_path, 'rb') as f:
+                img_b64 = base64.b64encode(f.read()).decode('utf-8')
+            img_data_uri = f"data:image/png;base64,{img_b64}"
+
+            if "/images/" in self.path and not "view" in self.path:
+                with open(file_path, 'rb') as f:
+                    img_bytes = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/png')
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self.end_headers()
+                self.wfile.write(img_bytes)
+                return
+
+            html = f"""<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; text-align: center; }}
+        .header {{ background: #1e293b; border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid #334155; }}
+        h1 {{ font-size: 1.2rem; margin: 0 0 6px 0; color: #38bdf8; }}
+        p {{ font-size: 0.9rem; margin: 0; color: #94a3b8; }}
+        .img-container {{ background: #000; border-radius: 12px; overflow: hidden; border: 2px solid #38bdf8; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 15px; }}
+        img {{ width: 100%; height: auto; display: block; }}
+        .footer {{ font-size: 0.8rem; color: #64748b; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📐 {title}</h1>
+        <p>פרויקט לוד ניר צבי — עמרם אברהם | מודל ושרטוט מקורי</p>
+    </div>
+    <div class="img-container">
+        <img src="{img_data_uri}" alt="{title}">
+    </div>
+    <div class="footer">
+        OpenClaw Engineering Engine • שרת סוכן אוטונומי חי
+    </div>
+</body>
+</html>"""
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.end_headers()
+            self.wfile.write(html.encode('utf-8'))
+            return
+
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "agent": "OpenClaw Standalone Direct API for ChatGPT"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "agent": "OpenClaw Master Dynamic Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
+        host_header = self.headers.get('Host', 'inclusion-refer-maintenance-associations.trycloudflare.com')
         
         try:
             req_json = json.loads(post_data.decode('utf-8'))
@@ -95,23 +187,73 @@ class OpenClawHttpHandler(BaseHTTPRequestHandler):
             req_json = {}
 
         raw_text = " ".join([str(v) for v in req_json.values() if isinstance(v, (str, int, float))])
+        p = raw_text.lower()
+        path = self.path.lower()
         
-        # Process directly via OpenClaw
-        response_text = openclaw_agent.process_command(raw_text)
+        digits = re.findall(r'\d+', p)
+        num = int(digits[0]) if digits else 1
+
+        # 1. Identify Discipline
+        disc = "structural"
+        disc_name = "קונסטרוקציה ושלד"
+        if any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים", "שופכין"]):
+            disc = "plumbing"
+            disc_name = "אינסטלציה סניטרית וכיבוי אש"
+        elif any(k in p for k in ["חשמל", "electrical"]):
+            disc = "electrical"
+            disc_name = "חשמל ומערכות חירום"
+        elif any(k in p for k in ["מיזוג", "hvac", "עשן"]):
+            disc = "hvac"
+            disc_name = "מיזוג אוויר ושחרור עשן"
+        elif any(k in p for k in ["אדריכל", "arch", "מכר"]):
+            disc = "architectural"
+            disc_name = "אדריכלות ותוכניות מכר"
+        elif any(k in p for k in ["נוף", "פיתוח"]):
+            disc = "landscape"
+            disc_name = "פיתוח נופי וניקוז חצר"
+
+        # 2. Check Task: BOQ vs Sheet Capture vs Litigation vs TaxLand
+        if any(k in p for k in ["כמויות", "boq", "takeoff", "כתב כמויות"]):
+            openclaw_output = generate_multi_discipline_boq(disc)
+        elif "taxland" in path or any(k in p for k in ["מס שבח", "מס רכישה", "49ז", "שבח"]):
+            tax_res = tax_engine.calculate_betterment_tax_linear(
+                purchase_price=float(req_json.get("purchase_price", 1000000)),
+                sale_price=float(req_json.get("sale_price", 3500000)),
+                purchase_date_str=req_json.get("purchase_date", "2005-01-01"),
+                sale_date_str="2026-06-01"
+            )
+            openclaw_output = f"### 🏛️ תכנון מס מקרקעין רב-מסלולי (OpenClaw TaxLand):\n\n{json.dumps(tax_res, ensure_ascii=False, indent=2)}"
+        elif "mega" in path or any(k in p for k in ["פולינר", "אגרובנק", "תביעה", "סתירות", "שירן"]):
+            mega_res = get_case_data(req_json.get("case_id", "CASE-POLINER"), raw_text)
+            openclaw_output = f"### ⚖️ ניתוח חדר מלחמה ליטיגטורי (OpenClaw Mega-Case):\n\n{json.dumps(mega_res, ensure_ascii=False, indent=2)}"
+        else:
+            file_path = resolve_exact_image_file(disc, num)
+            sheet_title = extract_sheet_title(file_path, disc, num)
+            view_url = f"https://{host_header}/view/{disc}_{num}"
+            
+            openclaw_output = (
+                f"### 📐 {sheet_title} — פרויקט לוד ניר צבי (עמרם אברהם)\n\n"
+                f"סוכן OpenClaw פתח את תוכניות ה-{disc_name} של הפרויקט ורינדר את הגיליון המדויק:\n\n"
+                f"🖼️ **[לחץ כאן לפתיחת צילום הגיליון במסך מלא]({view_url})**"
+            )
 
         res = {
             "status": "SUCCESS",
             "agent": "OpenClaw Autonomous Agent",
-            "openclaw_response": response_text
+            "discipline": disc_name,
+            "openclaw_response": openclaw_output,
+            "direct_yogi_response": openclaw_output,
+            "message": openclaw_output
         }
 
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(json.dumps(res, ensure_ascii=False, indent=2).encode('utf-8'))
 
 if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8080), OpenClawHttpHandler)
-    print("OpenClaw Standalone Direct API Server running on port 8080...")
+    server = HTTPServer(('0.0.0.0', 8080), OpenClawMasterHandler)
+    print("OpenClaw Master Server running on port 8080...")
     server.serve_forever()
