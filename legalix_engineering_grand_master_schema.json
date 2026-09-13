@@ -1,0 +1,70 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix Engineering Master Universal API",
+    "version": "4.0.0",
+    "description": "סוכן העל האוטונומי של Legalix Engineering לביצוע כל משימה הנדסית ללא מגבלות — שרטוטים, צילום ורינדור גיליונות (Sheets), חישובי כמויות ומכרזים (BOQ), נספחים סניטריים/עשן/חשמל/ממ״דים, אנליזות פיזיקה OpenSees ובקרת תכן רב-תחומית."
+  },
+  "servers": [
+    {
+      "url": "https://inclusion-refer-maintenance-associations.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "ביצוע משימה הנדסית אוטונומית — שרטוטי CAD/BIM, רינדור גיליונות, כתבי כמויות, נספחים ובקרת תכן",
+        "operationId": "executeUniversalEngineeringMasterTask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "building_id": {
+                    "type": "string",
+                    "description": "הוראת המשתמש המלאה (למשל: צלם גיליון 12 בחשמל, חלץ תמונה 6 בקונסטרוקציה, חשב כמויות בטון, הפק נספח סניטרי, בקרת שלד)"
+                  },
+                  "task_type": {
+                    "type": "string",
+                    "description": "סוג המשימה: צילום גיליון / שרטוט / כתב כמויות / נספח / אנליזה / בקרת תכן"
+                  }
+                },
+                "required": ["building_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאת הביצוע המלאה מסוכן הליבה האוטונומי",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "description": "סטטוס הביצוע (SUCCESS)" },
+                    "operation": { "type": "string", "description": "סוג הפעולה שבוצעה" },
+                    "project_name": { "type": "string", "description": "שם הפרויקט" },
+                    "drawing_file": { "type": "string", "description": "קובץ המקור (DWG / RVT)" },
+                    "sheet_number": { "type": "string", "description": "מספר הגיליון (למשל: EL-012, ST-106, A-003, M-014, PL-001)" },
+                    "sheet_title": { "type": "string", "description": "כותרת הגיליון והשרטוט" },
+                    "scale": { "type": "string", "description": "קנה מידה (למשל: 1:50, 1:25, 1:100)" },
+                    "extracted_specifications": { "type": "object", "description": "מפרט טכני ונתונים הנדסיים מחולצים" },
+                    "direct_image_png_url": { "type": "string", "description": "קישור ישיר ובלעדי לתמונת PNG נקייה וחדה" },
+                    "image_markdown": { "type": "string", "description": "תחביר Markdown להצגת התמונה בצ'אט" },
+                    "dwg_source_url": { "type": "string", "description": "קישור ישיר להורדת שרטוט ה-DWG המקורי" },
+                    "word_report_url": { "type": "string", "description": "קישור לדוח Word מלא במידה והתבקשה בקרה" },
+                    "summary": { "type": "string", "description": "תקציר הביצוע ההנדסי המדויק" },
+                    "message": { "type": "string", "description": "הודעת הסוכן למשתמש" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
