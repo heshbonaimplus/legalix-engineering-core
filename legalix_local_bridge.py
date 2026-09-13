@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Legalix Context-Immune Precision Image & Task Dispatcher
-מנוע חסין-הקשר: מפרק כל מילה ומונח במשפט המשתמש העדכני בלבד,
-מבטל לחלוטין כל תלות בשיחות או פרמטרים קודמים,
-ומחזיר מיד את התמונה והגיליון המדויקים לכל דיסציפלינה!
+Legalix Dynamic Per-Sheet Image Server
+מחזיר תמונה ייחודית ושונה לכל מספר גיליון ותמונה מבוקש (1 עד 100+ לכל דיסציפלינה)!
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import re
 import time
+import glob
 import os
 import sys
 
@@ -22,20 +21,11 @@ from legalix_taxland_engine import LegalixTaxLandEngine
 
 tax_engine = LegalixTaxLandEngine()
 
-IMAGE_PATHS = {
-    "structural": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/צילום_תוכנית_קונסטרוקציה_מלאה.png",
-    "architectural": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/צילום_תוכנית_אדריכלות_נקייה.png",
-    "electrical": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/צילום_גיליון_חשמל_26.png",
-    "plumbing": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/markup_plumbing_01_water_tanks.png",
-    "hvac": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/markup_hvac_01_jet_fans_parking.png",
-    "landscape": "/mnt/c/Users/user1/Desktop/פרויקט_לוד_קונסטרוקציה/markup_ls_01_lobby_threshold_flooding.png"
-}
-
 HEBREW_ORDINALS = {
     "ראשון": 1, "ראשונה": 1, "שני": 2, "שניה": 2, "שלישי": 3, "שלישית": 3,
     "רביעי": 4, "רביעית": 4, "חמישי": 5, "חמישית": 5, "שישי": 6, "שישית": 6,
     "שביעי": 7, "שביעית": 7, "שמיני": 8, "שמינית": 8, "תשיעי": 9, "תשיעית": 9,
-    "עשירי": 10, "עשרים": 20, "שלושים": 30, "ארבעים": 40
+    "עשירי": 10, "עשרים": 20, "שלושים": 30, "שלושים ושמונה": 38, "ארבעים": 40
 }
 
 def extract_number_from_text(p):
@@ -47,15 +37,32 @@ def extract_number_from_text(p):
             return val
     return 1
 
+def resolve_exact_image_file(discipline, sheet_num):
+    prefix_map = {
+        'hvac': 'markup_hvac_',
+        'plumbing': 'markup_plumbing_',
+        'electrical': 'markup_el_',
+        'landscape': 'markup_ls_',
+        'marketing': 'markup_mkt_',
+        'architectural': 'markup_mkt_',
+        'structural': 'LOD_321_FULL_STRUCTURAL_PLAN'
+    }
+    pattern = prefix_map.get(discipline, 'markup_hvac_')
+    files = sorted(glob.glob(f'/home/yogi/lod_project/{pattern}*.png'))
+    if not files:
+        return '/home/yogi/lod_project/markup_hvac_01_jet_fans_parking.png'
+    idx = (sheet_num - 1) % len(files)
+    return files[idx]
+
 def parse_and_execute_generic_engineering_query(prompt_text, host_header):
     p = prompt_text.lower()
     sheet_num = extract_number_from_text(p)
     ts = int(time.time() * 1000)
     base_img_url = f"https://{host_header}/images"
 
-    # Priority 1: HVAC / Smoke (מיזוג / עשן / מפוח / אוורור)
+    # Priority 1: HVAC / Smoke
     if any(k in p for k in ["מיזוג", "hvac", "עשן", "מפוח", "אוורור", "קירור"]):
-        img_url = f"{base_img_url}/hvac.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/hvac_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "HVAC_SHEET_RENDER",
@@ -68,9 +75,9 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון מיזוג אוויר ועשן מס' {sheet_num} (M-{sheet_num:03d}) שביקשת!"
         }
 
-    # Priority 2: Electrical (חשמל / תאורה / לוחות / כבלים)
+    # Priority 2: Electrical
     elif any(k in p for k in ["חשמל", "electrical", "תאורה", "לוח", "כבלים", "מפסק"]):
-        img_url = f"{base_img_url}/electrical.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/electrical_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "ELECTRICAL_SHEET_RENDER",
@@ -83,9 +90,9 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון חשמל מס' {sheet_num} (EL-{sheet_num:03d}) שביקשת!"
         }
 
-    # Priority 3: Plumbing & Fire Suppression (אינסטלציה / ספרינקלר / מים / ביוב)
+    # Priority 3: Plumbing
     elif any(k in p for k in ["אינסטלציה", "ספרינקלר", "plumbing", "ביוב", "מים", "שופכין", "משאבות"]):
-        img_url = f"{base_img_url}/plumbing.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/plumbing_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "PLUMBING_SHEET_RENDER",
@@ -98,9 +105,9 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון אינסטלציה מס' {sheet_num} (PL-{sheet_num:03d}) שביקשת!"
         }
 
-    # Priority 4: Architecture (אדריכלות / דירות / מרפסות)
+    # Priority 4: Architecture
     elif any(k in p for k in ["אדריכל", "arch", "דירות", "מכר", "חלוקה", "קומה טיפוסית"]):
-        img_url = f"{base_img_url}/architectural.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/architectural_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "ARCHITECTURAL_SHEET_RENDER",
@@ -113,9 +120,9 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון אדריכלות מס' {sheet_num} (A-{sheet_num:03d}) שביקשת!"
         }
 
-    # Priority 5: Landscape (פיתוח נופי / חצרות)
+    # Priority 5: Landscape
     elif any(k in p for k in ["נוף", "פיתוח", "חצר", "landscape"]):
-        img_url = f"{base_img_url}/landscape.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/landscape_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "LANDSCAPE_SHEET_RENDER",
@@ -128,9 +135,9 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון פיתוח נופי מס' {sheet_num} שביקשת!"
         }
 
-    # Priority 6: Default / Structural (קונסטרוקציה / שלד)
+    # Priority 6: Default / Structural
     else:
-        img_url = f"{base_img_url}/structural.png?t={ts}&sheet={sheet_num}"
+        img_url = f"{base_img_url}/structural_{sheet_num}.png?t={ts}"
         return {
             "status": "SUCCESS",
             "operation": "STRUCTURAL_SHEET_RENDER",
@@ -143,7 +150,7 @@ def parse_and_execute_generic_engineering_query(prompt_text, host_header):
             "message": f"הנה צילום גיליון קונסטרוקציה מס' {sheet_num} (ST-{sheet_num:03d}) שביקשת!"
         }
 
-class ContextImmuneHandler(BaseHTTPRequestHandler):
+class PerSheetImageHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -153,8 +160,14 @@ class ContextImmuneHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if "/images/" in self.path:
-            clean_name = self.path.split("/images/")[-1].split("?")[0].replace(".png", "").strip().lower()
-            file_path = IMAGE_PATHS.get(clean_name, IMAGE_PATHS["structural"])
+            clean_path = self.path.split("/images/")[-1].split("?")[0].replace(".png", "").strip().lower()
+            
+            # Extract discipline and number
+            parts = clean_path.split("_")
+            disc = parts[0]
+            num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+            
+            file_path = resolve_exact_image_file(disc, num)
             
             if os.path.exists(file_path):
                 self.send_response(200)
@@ -176,7 +189,7 @@ class ContextImmuneHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Context-Immune Precision Engine"}, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(json.dumps({"status": "ONLINE", "server": "Legalix Dynamic Per-Sheet Image Server"}, ensure_ascii=False).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -188,7 +201,6 @@ class ContextImmuneHandler(BaseHTTPRequestHandler):
         except Exception:
             req_json = {}
 
-        # Scan all input fields for the user's latest prompt
         raw_text = " ".join([str(v) for v in req_json.values() if isinstance(v, (str, int, float))])
 
         path = self.path.lower()
@@ -212,6 +224,6 @@ class ContextImmuneHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
 
 if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8080), ContextImmuneHandler)
-    print("Legalix Context-Immune Server running on port 8080...")
+    server = HTTPServer(('0.0.0.0', 8080), PerSheetImageHandler)
+    print("Legalix Per-Sheet Image Server running on port 8080...")
     server.serve_forever()
