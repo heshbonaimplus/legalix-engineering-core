@@ -1,0 +1,70 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legalix Master Autonomous Core API",
+    "version": "9.0.0",
+    "description": "סוכן העל האוטונומי הראשי של Legalix לביצוע כל משימה הנדסית, משפטית או מיסויית ללא מגבלות — שרטוטי CAD/BIM, רינדור גיליונות, כתבי כמויות (BOQ), נספחים סניטריים/עשן/חשמל/ממ״דים, תכנון מס מקרקעין רב-מסלולי (TaxLand), וחדר מלחמה ליטיגטורי (Mega-Case)."
+  },
+  "servers": [
+    {
+      "url": "https://inclusion-refer-maintenance-associations.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/audit-structural-model": {
+      "post": {
+        "summary": "הפעלת סוכן הליבה האוטונומי בענן לכל משימת הנדסה, שרטוט, כמויות, מיסוי או ליטיגציה",
+        "operationId": "executeUniversalEngineeringMasterTask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "building_id": {
+                    "type": "string",
+                    "description": "הוראת המשתמש המלאה (למשל: תכין כתב כמויות חשמל, צלם גיליון 6 בקונסטרוקציה, תכנן מס שבח, חקור תיק פולינר)"
+                  },
+                  "task_type": {
+                    "type": "string",
+                    "description": "סוג המשימה: כתב כמויות / צילום גיליון / שרטוט / נספח / אנליזה / מיסוי / ליטיגציה"
+                  }
+                },
+                "required": ["building_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "תוצאת הביצוע המלאה מסוכן הליבה האוטונומי",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "description": "סטטוס הביצוע (SUCCESS)" },
+                    "agent": { "type": "string", "description": "סוכן הליבה האוטונומי" },
+                    "operation": { "type": "string", "description": "סוג הפעולה שבוצעה" },
+                    "project_name": { "type": "string", "description": "שם הפרויקט או התיק" },
+                    "drawing_file": { "type": "string", "description": "קובץ המקור (DWG / RVT / PDF)" },
+                    "sheet_number": { "type": "string", "description": "מספר הגיליון (EL-012, ST-106, A-003, M-014, PL-001)" },
+                    "sheet_title": { "type": "string", "description": "כותרת הגיליון והשרטוט" },
+                    "scale": { "type": "string", "description": "קנה מידה (1:50, 1:25, 1:100)" },
+                    "direct_image_png_url": { "type": "string", "description": "קישור ישיר ובלעדי לתמונת PNG נקייה וחדה" },
+                    "image_markdown": { "type": "string", "description": "תחביר Markdown להצגת התמונה בצ'אט" },
+                    "direct_yogi_response": { "type": "string", "description": "התשובה המלאה והמנוסחת של יוגי" },
+                    "openclaw_response": { "type": "string", "description": "התשובה המלאה של סוכן OpenClaw" },
+                    "summary": { "type": "string", "description": "תקציר הביצוע ההנדסי או המיסויי" },
+                    "message": { "type": "string", "description": "הודעת הסוכן המלאה למשתמש" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
